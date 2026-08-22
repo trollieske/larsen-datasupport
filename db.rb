@@ -7,6 +7,7 @@ require "fileutils"
 require "time"
 
 DB_PATH = ENV.fetch("DATABASE_PATH", File.join(__dir__, "data", "larsen.db"))
+UPLOADS_DIR = File.join(File.dirname(DB_PATH), "uploads")
 
 def db
   @db ||= begin
@@ -39,12 +40,22 @@ end
 
 def migrate!
   db.execute_batch(File.read(File.join(__dir__, "schema.sql")))
+  FileUtils.mkdir_p(UPLOADS_DIR)
 
   # Kolonner lagt til etter første versjon — trygge for eksisterende databaser.
   ensure_column("time_entries", "invoice_ref", "TEXT")
   ensure_column("time_entries", "invoiced_at", "TEXT")
   ensure_column("hardware_sales", "invoice_ref", "TEXT")
   ensure_column("hardware_sales", "invoiced_at", "TEXT")
+  ensure_column("hardware_items", "photo", "TEXT")
+  ensure_column("hardware_items", "tags", "TEXT")
+  ensure_column("hardware_sales", "invoice_ref", "TEXT")
+  ensure_column("hardware_sales", "invoiced_at", "TEXT")
+  ensure_column("emails", "kind", "TEXT DEFAULT 'auto'")
+  ensure_column("emails", "ref", "TEXT")
+  ensure_column("emails", "error", "TEXT")
+  ensure_column("emails", "sent_at", "TEXT")
+  ensure_column("emails", "status", "TEXT DEFAULT 'queued'")
 
   defaults = {
     "default_rate_ore" => "85000",  # 850 kr/time — standard norsk IT-supportrate
@@ -54,7 +65,21 @@ def migrate!
     "account_number" => "",
     "vipps" => "",
     "contact_email" => "",
-    "invoice_counter" => "0"
+    "invoice_counter" => "0",
+    "public_base_url" => "",
+    # Webshop / prisinlogging
+    "shop_title" => "Larsen Datasupport",
+    "shop_subtitle" => "Brukt og ny hardware — logg inn for pris",
+    "shop_enabled" => "1",
+    # SMTP for automatisk e-post
+    "smtp_host" => "",
+    "smtp_port" => "587",
+    "smtp_user" => "",
+    "smtp_password" => "",
+    "smtp_from" => "",
+    # Google Sign-In (valgfritt; uten fungerer magisk lenke)
+    "google_client_id" => "",
+    "google_client_secret" => ""
   }
   defaults.each { |k, v| set_setting(k, v) unless setting(k) }
 end
@@ -93,6 +118,24 @@ def seed!
       )
     end
     puts "  → 4 testvarer opprettet"
+  end
+
+  if db.get_first_value("SELECT COUNT(*) FROM contacts").to_i.zero?
+    now = Time.now.utc.iso8601
+    contacts = [
+      ["Kari Berg", "kari@bergdahl.no", "915 40 210", "regnskap,fast", "Interessert i oppgradert skjerm til regnskapsgjennomgang (2011).", 1],
+      ["Ole Solheim", "ole@solheim.no", "99 88 77 66", "fast,entusiast", "Kjøper SSD-er til maskinparken når de dukker opp.", 2],
+      ["Elin Hansen", "elin@fjordveien.no", "33 22 11 00", "fast,prisbevisst", "Styrer drift av fellesnettverket.", 3],
+      ["Per Nilsen", "per@finn-koep.no", "", "interessert,privatmarkedsføring", "Ledet fra Finn.no-annonse om 24\"-skjerm. Følg opp!", nil],
+      ["Mona Grønn", "mona@lokalbedrift.no", "966 12 33", "potensiell,privatmarkedsføring", "Vurderer komplett oppsett til ny avdeling.", nil]
+    ]
+    contacts.each do |c|
+      db.execute(
+        "INSERT INTO contacts (name, email, phone, tags, notes, customer_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [c[0], c[1], c[2], c[3], c[4], c[5], now]
+      )
+    end
+    puts "  → 5 testkontakter opprettet"
   end
 
   puts "Seed ferdig. Database: #{DB_PATH}"

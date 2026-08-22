@@ -1,0 +1,12 @@
+<main class="public-card">
+  <h1>✓ Innloggingslenke sendt</h1>
+  <p class="muted">Vi har sendt en lenke til <strong><%= h(@email) %></strong>.</p>
+  <p class="muted small">Lenken er gyldig i 30 minutter — trykk på den i e-posten for å se prisene i butikken.</p>
+  <% if @dev_link %>
+    <div class="dev-link">
+      <p class="small"><strong>Utviklingsmodus</strong> (SMTP ikke satt opp) — her er lenken din:</p>
+      <a href="<%= @dev_link %>"><%= h(@dev_link) %></a>
+    </div>
+  <% end %>
+  <p><a class="btn" href="/butikk">← Tilbake til butikken</a></p>
+</main>

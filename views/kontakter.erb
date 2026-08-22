@@ -1,0 +1,82 @@
+<h1>Kontakter — enkelt CRM</h1>
+
+<% if @edit_contact %>
+  <section class="card">
+    <h2>Rediger kontakt: <%= h(@edit_contact["name"]) %></h2>
+    <form method="post" action="/kontakter/<%= @edit_contact['id'] %>" class="grid-form">
+      <div class="field"><label>Navn</label><input type="text" name="name" value="<%= h(@edit_contact['name']) %>" required maxlength="200"></div>
+      <div class="field"><label>E-post</label><input type="email" name="email" value="<%= h(@edit_contact['email']) %>"></div>
+      <div class="field"><label>Telefon</label><input type="text" name="phone" value="<%= h(@edit_contact['phone']) %>"></div>
+      <div class="field"><label>Tags (kommaseparert)</label><input type="text" name="tags" value="<%= h(@edit_contact['tags']) %>" placeholder="fast,interessert"></div>
+      <div class="field">
+        <label>Knytt til kunde (valgfritt)</label>
+        <select name="customer_id">
+          <option value="">— Ingen —</option>
+          <% @customers.each do |c| %>
+            <option value="<%= c['id'] %>" <%= "selected" if @edit_contact['customer_id'].to_i == c['id'] %>><%= h(c['name']) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="field"><label>Notater</label><input type="text" name="notes" value="<%= h(@edit_contact['notes']) %>" maxlength="500"></div>
+      <div class="field align-end">
+        <div class="actions"><button class="btn primary">Lagre</button><a class="btn" href="/kontakter">Avbryt</a></div>
+      </div>
+    </form>
+  </section>
+<% end %>
+
+<section class="card">
+  <h2>Legg til kontakt</h2>
+  <form method="post" action="/kontakter" class="grid-form">
+    <div class="field"><label>Navn</label><input type="text" name="name" required maxlength="200" placeholder="Per Nilsen"></div>
+    <div class="field"><label>E-post</label><input type="email" name="email" placeholder="per@epost.no"></div>
+    <div class="field"><label>Telefon</label><input type="text" name="phone" placeholder="915 40 210"></div>
+    <div class="field"><label>Tags (komma-separert)</label><input type="text" name="tags" placeholder="interessert,privatmarkedsføring"></div>
+    <div class="field">
+      <label>Knyttet til kunde (valgfritt)</label>
+      <select name="customer_id">
+        <option value="">— Ingen —</option>
+        <% @customers.each do |c| %><option value="<%= c['id'] %>"><%= h(c['name']) %></option><% end %>
+      </select>
+    </div>
+    <div class="field"><label>Notater</label><input type="text" name="notes" maxlength="500" placeholder="F.eks. kom fra Finn.no-annonse"></div>
+    <div class="field align-end"><button type="submit" class="btn primary">Legg til</button></div>
+  </form>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Alle kontakter (<%= @contacts.count %>)</h2>
+    <form method="get" action="/kontakter" class="form-row search-row">
+      <select name="tag" onchange="this.form.submit()">
+        <option value="">Alle tags</option>
+        <% @tags.each do |t| %>
+          <option value="<%= h(t) %>" <%= "selected" if @tag_filter == t %>><%= h(t) %></option>
+        <% end %>
+      </select>
+    </form>
+  </div>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Navn</th><th>E-post</th><th>Telefon</th><th>Tags</th><th>Knyttet til</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <% @contacts.each do |c| %>
+          <tr>
+            <td><a href="/kontakter/<%= c['id'] %>"><strong><%= h(c['name']) %></strong></a></td>
+            <td class="muted"><%= h(c['email']) %></td>
+            <td class="muted"><%= h(c['phone']) %></td>
+            <td><% c['tags'].to_s.split(',').map(&:strip).reject(&:empty?).each do |t| %><span class="tag"><%= h(t) %></span> <% end %></td>
+            <td class="muted"><%= h(c['company']) %></td>
+            <td class="no-print actions-cell">
+              <a class="btn small" href="/kontakter?edit=<%= c['id'] %>">Rediger</a>
+              <form method="post" action="/kontakter/<%= c['id'] %>/delete" class="inline-form" onsubmit="return confirm('Slette <%= js(c['name']) %>?')">
+                <button class="btn small danger">✕</button>
+              </form>
+            </td>
+          </tr>
+        <% end %>
+        <% if @contacts.empty? %><tr><td colspan="6" class="muted">Ingen kontakter ennå.</td></tr><% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

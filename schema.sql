@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS hardware_items (
   id                INTEGER PRIMARY KEY AUTOINCREMENT,
   name              TEXT NOT NULL,
   category          TEXT,
+  photo             TEXT,
   cost_price        INTEGER NOT NULL DEFAULT 0,   -- øre
   sale_price        INTEGER NOT NULL DEFAULT 0,   -- øre
   quantity_in_stock INTEGER NOT NULL DEFAULT 0,
@@ -55,6 +56,52 @@ CREATE TABLE IF NOT EXISTS hardware_sales (
 CREATE TABLE IF NOT EXISTS settings (
   key   TEXT PRIMARY KEY,
   value TEXT
+);
+
+CREATE TABLE IF NOT EXISTS emails (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  to_address   TEXT NOT NULL,
+  subject      TEXT NOT NULL,
+  body         TEXT NOT NULL,
+  kind         TEXT NOT NULL DEFAULT 'auto',   -- invoice | magic | mailmerge | welcome
+  ref          TEXT,
+  status       TEXT NOT NULL DEFAULT 'queued', -- queued | sent | failed | logged
+  error        TEXT,
+  sent_at      TEXT,
+  created_at   TEXT NOT NULL
+);
+
+-- CRM-som-ikke-er-CRM: kontakter (kunder + leads) med tags og tidslinje.
+CREATE TABLE IF NOT EXISTS contacts (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT NOT NULL,
+  email       TEXT,
+  phone       TEXT,
+  tags        TEXT,              -- kommaseparert
+  notes       TEXT,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  created_at  TEXT NOT NULL
+);
+
+-- Webshop-brukere (magic link eller Google).
+CREATE TABLE IF NOT EXISTS web_users (
+  id           INTEGER PRIMARY KEY AUTOINCREMENT,
+  email        TEXT NOT NULL UNIQUE,
+  name         TEXT,
+  provider     TEXT NOT NULL DEFAULT 'magic',  -- magic | google
+  google_uid   TEXT,
+  last_login_at TEXT,
+  created_at   TEXT NOT NULL
+);
+
+-- Magiske innloggingslenker (én bruk, utløper).
+CREATE TABLE IF NOT EXISTS login_tokens (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  email       TEXT NOT NULL,
+  token       TEXT NOT NULL,
+  expires_at  TEXT NOT NULL,
+  used_at     TEXT,
+  created_at  TEXT NOT NULL
 );
 
 CREATE INDEX IF NOT EXISTS idx_time_entries_customer   ON time_entries(customer_id);

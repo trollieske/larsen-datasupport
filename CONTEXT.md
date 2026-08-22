@@ -146,3 +146,10 @@ APP_PASSWORD="lol" nohup bundle exec puma -b tcp://0.0.0.0:4567 > /tmp/larsen.lo
 sleep 4; curl -s http://127.0.0.1:4567/health
 # Windows-tilgang: ssh -L 4567:localhost:4567 ck2k@192.168.0.152  → http://localhost:4567
 ```
+## 10. ✓ Fullført i denne økten (2026-08-23 ~01:20)
+
+- **App ferdig & verifisert**: admin-auth (Basic), HTMX-kortvegg med foto+selg, offentlig delbar vareside `/vare/:id` med prislåsing, magisk-lenke-innlogging + Google OAuth (gracefull nedfall), CRM "kontakter" + tidslinje (per kontakt: timer/salg/faktura/epost), e-post-outbox + SMTP-flush, mailmerge `{{navn}}`, automatisk faktura-e-post i kø.
+- **Sådd**: 3 kunder + 5 kontakter + 4 varer (med foto) — alle i `data/larsen.db`.
+- **Windows-tilgang** fungerer via SSH-tunnel: `ssh -L 4567:localhost:4567 ck2k@192.168.0.152` → `http://localhost:4567` (passord `lol`).
+- **Deploy:** `cloudflared tunnel --url http://localhost:4567` (trycloudflare.com, ingen konto) — eller Fly.io med `fly launch` + `fly secrets set APP_PASSWORD ...` (krever brukerens login).
+- **Neste steg:** webshop med Google-innlogging + magisk lenke trenger SMTP satt opp; faktura-til-CRM-knapp.

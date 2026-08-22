@@ -1,0 +1,35 @@
+<div class="shop-hero">
+  <h1><%= h(@shop_title) %></h1>
+  <p class="muted"><%= h(@shop_subtitle) %></p>
+</div>
+
+<section class="card shop-card">
+  <div class="shop-grid">
+    <% @items.each do |it| %>
+      <a class="shop-item <%= it['quantity_in_stock'].to_i <= 0 ? 'sold-out' : '' %>" href="/vare/<%= it['id'] %>">
+        <div class="shop-thumb">
+          <% if it['photo'] %>
+            <img src="/upload/<%= it['photo'] %>" alt="<%= h(it['name']) %>" loading="lazy">
+          <% else %>
+            <span class="ph-emoji big"><%= CATEGORY_EMOJI.fetch(it['category'], "📦") %></span>
+          <% end %>
+        </div>
+        <span class="tag"><%= h(it['category']) %></span>
+        <h3><%= h(it['name']) %></h3>
+        <% if @logged_in && it['sale_price'].to_i > 0 %>
+          <p class="shop-price"><%= format_kr(it['sale_price']) %></p>
+        <% else %>
+          <p class="shop-price locked"><%= it['quantity_in_stock'].to_i <= 0 ? "Utsolgt" : "🔒 Logg inn for pris" %></p>
+        <% end %>
+        <% if it['quantity_in_stock'].to_i > 0 %>
+          <span class="stock-badge"><%= it['quantity_in_stock'] %> på lager</span>
+        <% else %>
+          <span class="stock-badge zero">Utsolgt</span>
+        <% end %>
+      </a>
+    <% end %>
+  </div>
+  <% if @items.empty? %>
+    <p class="muted">Ingen varer i butikken ennå — kom tilbake senere!</p>
+  <% end %>
+</section>

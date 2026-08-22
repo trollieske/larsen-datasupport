@@ -1,0 +1,73 @@
+<% if @items.empty? %>
+  <div class="empty-state"><p>Ingen varer ennå — legg til din første vare.</p></div>
+<% else %>
+  <p class="stats-strip">
+    <span><strong><%= @stats[:units] %></strong> stk på lager</span>
+    <span>Lagerverdi <strong><%= format_kr(@stats[:stock_value]) %></strong></span>
+    <span class="good">Potensial <strong><%= format_kr(@stats[:potential]) %></strong></span>
+    <span>Realisert <strong><%= format_kr(@stats[:realized]) %></strong></span>
+  </p>
+  <div class="card-grid" id="cards">
+    <% @items.each do |it| %>
+      <% pct = potential_profit(it); real = realized_profit(it) %>
+      <article class="item-card <%= it['quantity_in_stock'].to_i <= 0 ? 'sold-out' : '' %>">
+        <div class="item-photo">
+          <% if it['photo'] %>
+            <img src="/upload/<%= it['photo'] %>" alt="<%= h(it['name']) %>" loading="lazy">
+          <% else %>
+            <span class="ph-emoji"><%= CATEGORY_EMOJI.fetch(it['category'], "📦") %></span>
+          <% end %>
+        </div>
+        <div class="item-body">
+          <div class="item-head">
+            <span class="tag"><%= h(it['category']) %></span>
+            <span class="stock-badge <%= it['quantity_in_stock'].to_i <= 0 ? 'zero' : '' %>"><%= it['quantity_in_stock'] %> på lager</span>
+          </div>
+          <h3 class="item-name"><%= h(it['name']) %></h3>
+          <p class="item-prices">
+            <span class="cost">inn <%= format_kr(it['cost_price']) %></span>
+            <span class="sale">ut <%= format_kr(it['sale_price']) %></span>
+          </p>
+          <% if it['sale_price'].to_i > 0 && it['cost_price'].to_i > 0 %>
+            <p class="item-margin"><%= pct >= 0 ? '✓' : '✗' %> margin <%= format_kr(pct) %> / stk</p>
+          <% end %>
+          <div class="item-actions">
+            <details class="sell-details">
+              <summary class="btn small primary" <%= it['quantity_in_stock'].to_i <= 0 ? 'disabled onclick="return false"' : '' %>>
+                <%= it['quantity_in_stock'].to_i <= 0 ? 'Utsolgt' : '💰 Selg' %>
+              </summary>
+              <form method="post" action="/hardware/<%= it['id'] %>/sell" class="sell-form"
+                    hx-post="/hardware/<%= it['id'] %>/sell" hx-target="#cards" hx-swap="innerHTML">
+                <div class="field">
+                  <label>Antall</label>
+                  <input type="number" name="quantity" min="1" max="<%= it['quantity_in_stock'] %>" value="1" required>
+                </div>
+                <div class="field">
+                  <label>Salgspris (kr)</label>
+                  <input type="text" name="sale_price_each" inputmode="decimal" value="<%= kr_input(it['sale_price']) %>">
+                </div>
+                <div class="field">
+                  <label>Kunde (valgfri)</label>
+                  <select name="customer_id">
+                    <option value="">Anonym / Finn.no</option>
+                    <% @customers.each do |c| %>
+                      <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+                    <% end %>
+                  </select>
+                </div>
+                <button type="submit" class="btn small primary">Solgt!</button>
+              </form>
+            </details>
+            <button class="btn small copy-btn" data-copy="<%= h(it['name']) %> · <%= h(it['category']) %> · <%= format_kr(it['sale_price']) %> · <%= @base_url %>/vare/<%= it['id'] %>">⧉ <span>Kopier</span></button>
+            <a class="btn small" href="/hardware?edit=<%= it['id'] %>">✎</a>
+            <form method="post" action="/hardware/<%= it['id'] %>/delete" class="inline-form"
+                  hx-post="/hardware/<%= it['id'] %>/delete" hx-target="#cards" hx-swap="innerHTML"
+                  onsubmit="return confirm('Slette <%= js(it['name']) %>?')">
+              <button class="btn small danger" title="Slett">✕</button>
+            </form>
+          </div>
+        </div>
+      </article>
+    <% end %>
+  </div>
+<% end %>

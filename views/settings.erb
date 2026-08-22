@@ -2,6 +2,7 @@
 
 <section class="card narrow">
   <form method="post" action="/innstillinger" class="grid-form">
+    <h3 class="sect">Firma</h3>
     <div class="field">
       <label>Standard timepris (kr/time)</label>
       <input type="text" name="default_rate_ore" inputmode="decimal" value="<%= kr_input(setting('default_rate_ore')) %>">
@@ -30,12 +31,61 @@
       <label>Kontakt-e-post (brukes i «Interessert»-knappen på delbare varesider)</label>
       <input type="email" name="contact_email" value="<%= h(setting('contact_email')) %>">
     </div>
+
+    <h3 class="sect">Butikk &amp; offentlig nettadresse</h3>
+    <div class="field">
+      <label>Offentlig nettadresse (alle lenkene i e-post og «Kopier til Finn»)</label>
+      <input type="url" name="public_base_url" placeholder="https://larsen.fly.dev" value="<%= h(setting('public_base_url')) %>">
+    </div>
+    <div class="field">
+      <label>Butikknavn</label>
+      <input type="text" name="shop_title" value="<%= h(setting('shop_title')) %>">
+    </div>
+    <div class="field">
+      <label>Butikkundertittel</label>
+      <input type="text" name="shop_subtitle" value="<%= h(setting('shop_subtitle')) %>">
+    </div>
+
+    <h3 class="sect">E-post (SMTP) — automatisk fakturautsending og innloggingslenker</h3>
+    <div class="field">
+      <label>SMTP-vert (f.eks. smtp.gmail.com eller smtp.zoho.eu)</label>
+      <input type="text" name="smtp_host" value="<%= h(setting('smtp_host')) %>" placeholder="smtp.gmail.com">
+    </div>
+    <div class="field">
+      <label>SMTP-port</label>
+      <input type="number" name="smtp_port" value="<%= h(setting('smtp_port')) %>">
+    </div>
+    <div class="field">
+      <label>SMTP-brukernavn (e-postadresse)</label>
+      <input type="text" name="smtp_user" value="<%= h(setting('smtp_user')) %>">
+    </div>
+    <div class="field">
+      <label>SMTP-passord (app-passord, ikke vanlig passord)</label>
+      <input type="password" name="smtp_password" value="<%= h(setting('smtp_password')) %>">
+    </div>
+    <div class="field">
+      <label>Fra-adresse (tom = SMTP-brukernavn)</label>
+      <input type="email" name="smtp_from" value="<%= h(setting('smtp_from')) %>">
+    </div>
+    <p class="muted small full">Gmail: bruk et <em>app-passord</em> (2FA på) — ikke det vanlige passordet.</p>
+
+    <h3 class="sect">Google-innlogging (valgfritt)</h3>
+    <div class="field">
+      <label>Google Client ID</label>
+      <input type="text" name="google_client_id" value="<%= h(setting('google_client_id')) %>" placeholder="xxxxx.apps.googleusercontent.com">
+    </div>
+    <div class="field">
+      <label>Google Client Secret</label>
+      <input type="text" name="google_client_secret" value="<%= h(setting('google_client_secret')) %>">
+    </div>
+
     <div class="field align-end">
       <button type="submit" class="btn primary">Lagre innstillinger</button>
     </div>
   </form>
   <p class="muted small">
-    Pålogging settes med miljøvariabelen <code>APP_PASSWORD</code> — se <code>.env.example</code>.
-    Uten passord er appen åpen (bra for lokal utvikling).
+    Admin-innlogging settes med miljøvariabelen <code>APP_PASSWORD</code> (se <code>.env.example</code>) —
+    butikkbesøkende logger inn med magisk lenke eller Google.
+    Google Redirect-URI i Cloud Console: <code>&lt;public_base_url&gt;/auth/google/callback</code>.
   </p>
 </section>

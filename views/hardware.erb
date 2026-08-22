@@ -1,9 +1,9 @@
-<h1>Hardware-lager</h1>
+<h1>Hardware — kortvegg</h1>
 
 <% if @edit_item %>
   <section class="card">
     <h2>Rediger vare: <%= h(@edit_item["name"]) %></h2>
-    <form method="post" action="/hardware/<%= @edit_item['id'] %>" class="grid-form">
+    <form method="post" action="/hardware/<%= @edit_item['id'] %>" class="grid-form" enctype="multipart/form-data">
       <div class="field">
         <label>Navn</label>
         <input type="text" name="name" value="<%= h(@edit_item['name']) %>" required maxlength="200">
@@ -11,9 +11,7 @@
       <div class="field">
         <label>Kategori</label>
         <select name="category">
-          <% CATEGORIES.each do |c| %>
-            <option <%= "selected" if @edit_item['category'] == c %>><%= c %></option>
-          <% end %>
+          <% CATEGORIES.each do |c| %><option <%= "selected" if @edit_item['category'] == c %>><%= c %></option><% end %>
         </select>
       </div>
       <div class="field">
@@ -29,6 +27,10 @@
         <input type="number" name="quantity_in_stock" min="0" value="<%= @edit_item['quantity_in_stock'] %>">
       </div>
       <div class="field">
+        <label>Foto (valgfritt — nytt bilde erstatter)</label>
+        <input type="file" name="photo" accept="image/*">
+      </div>
+      <div class="field">
         <label>Notater</label>
         <input type="text" name="notes" value="<%= h(@edit_item['notes']) %>" maxlength="300">
       </div>
@@ -42,9 +44,10 @@
   </section>
 <% end %>
 
-<section class="card">
+<section class="card add-card">
   <h2>Legg til vare</h2>
-  <form method="post" action="/hardware" class="grid-form">
+  <form method="post" action="/hardware" class="grid-form" enctype="multipart/form-data"
+        hx-post="/hardware" hx-target="#cards" hx-swap="innerHTML" hx-encoding="multipart/form-data">
     <div class="field">
       <label>Navn</label>
       <input type="text" name="name" required maxlength="200" placeholder="Dell P2422H 24&quot;">
@@ -68,83 +71,46 @@
       <input type="number" name="quantity_in_stock" min="0" value="1">
     </div>
     <div class="field">
+      <label>Foto (valgfritt)</label>
+      <input type="file" name="photo" accept="image/*">
+    </div>
+    <div class="field">
       <label>Notater</label>
       <input type="text" name="notes" maxlength="300">
     </div>
     <div class="field align-end">
-      <button type="submit" class="btn primary">Legg til vare</button>
+      <button type="submit" class="btn primary big">＋ Legg til vare</button>
     </div>
   </form>
 </section>
 
 <section class="card">
-  <h2>Varer</h2>
-  <div class="table-wrap">
-    <table class="table">
-      <thead>
-        <tr>
-          <th>Vare</th>
-          <th>Kategori</th>
-          <th class="num">Kost</th>
-          <th class="num">Salg</th>
-          <th class="num">På lager</th>
-          <th class="num">Solgt</th>
-          <th class="num">Fortjeneste</th>
-          <th class="num">Lagerverdi</th>
-          <th class="no-print">Delbar lenke</th>
-          <th class="no-print"></th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @items.each do |it| %>
-          <tr>
-            <td>
-              <strong><%= h(it['name']) %></strong>
-              <% unless it['notes'].to_s.empty? %><br><span class="muted small"><%= h(it['notes']) %></span><% end %>
-            </td>
-            <td><span class="tag"><%= h(it['category']) %></span></td>
-            <td class="num"><%= format_kr(it['cost_price']) %></td>
-            <td class="num"><%= format_kr(it['sale_price']) %></td>
-            <td class="num"><%= it['quantity_in_stock'] %></td>
-            <td class="num"><%= it['sold_quantity'] %></td>
-            <td class="num"><%= format_kr((it['sale_price'].to_i - it['cost_price'].to_i) * it['sold_quantity'].to_i) %></td>
-            <td class="num"><%= format_kr(it['cost_price'].to_i * it['quantity_in_stock'].to_i) %></td>
-            <td class="no-print"><a class="btn small" href="/vare/<%= it['id'] %>" target="_blank">Åpne ↗</a></td>
-            <td class="no-print actions-cell">
-              <a class="btn small" href="/hardware?edit=<%= it['id'] %>">Rediger</a>
-              <details class="sell-details">
-                <summary class="btn small primary">Selg</summary>
-                <form method="post" action="/hardware/<%= it['id'] %>/sell" class="sell-form">
-                  <div class="field">
-                    <label>Antall</label>
-                    <input type="number" name="quantity" min="1" value="1" required>
-                  </div>
-                  <div class="field">
-                    <label>Salgspris (kr)</label>
-                    <input type="text" name="sale_price_each" inputmode="decimal" value="<%= kr_input(it['sale_price']) %>">
-                  </div>
-                  <div class="field">
-                    <label>Kunde (valgfri)</label>
-                    <select name="customer_id">
-                      <option value="">Anonym / Finn.no</option>
-                      <% @customers.each do |c| %>
-                        <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
-                      <% end %>
-                    </select>
-                  </div>
-                  <button type="submit" class="btn primary small">Registrer salg</button>
-                </form>
-              </details>
-              <form method="post" action="/hardware/<%= it['id'] %>/delete" onsubmit="return confirm('Slette <%= js(it['name']) %>?')">
-                <button class="btn small danger" title="Slett">✕</button>
-              </form>
-            </td>
-          </tr>
-        <% end %>
-        <% if @items.empty? %>
-          <tr><td colspan="10" class="muted">Ingen varer ennå — legg til din første vare over.</td></tr>
-        <% end %>
-      </tbody>
-    </table>
+  <div class="card-head">
+    <h2>Lageret</h2>
+    <div class="search-wrap">
+      <%= @customers.count %> kunder-referanser
+    </div>
   </div>
+  <%= erb :_cards, layout: false %>
 </section>
+
+<script>
+// Kopier ferdigformatert salgstekst ett trykk.
+document.addEventListener("click", function (e) {
+  var b = e.target.closest(".copy-btn");
+  if (!b) return;
+  var text = b.getAttribute("data-copy");
+  navigator.clipboard.writeText(text).then(function () {
+    var s = b.querySelector("span");
+    var old = s.textContent;
+    s.textContent = "Kopiert ✓";
+    setTimeout(function () { s.textContent = old; }, 1500);
+  });
+});
+// Lukk «Selg»-popup ved klikk utenfor.
+document.addEventListener("click", function (e) {
+  document.querySelectorAll("details.sell-details[open]").forEach(function (d) {
+    if (!d.contains(e.target)) d.removeAttribute("open");
+  });
+});
+</script>

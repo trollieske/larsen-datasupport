@@ -1,0 +1,38 @@
+<h1>Utsendelse — mailmerge</h1>
+
+<section class="card">
+  <h2>Send e-post til en gruppe kontakter</h2>
+  <p class="muted small">
+    Bruk <code>{{navn}}</code>, <code>{{firma}}</code> og <code>{{epost}}</code> i meldingen — de byttes ut per mottaker.
+    Velg hvilken gruppe (tag) som skal få e-posten. E-postene legges i kø og sendes via outboxen.
+  </p>
+  <form method="post" action="/utsendelse" class="grid-form">
+    <div class="field">
+      <label>Gruppe (tag)</label>
+      <select name="tag" required>
+        <option value="">— Velg gruppe —</option>
+        <% @tags.each do |t| %><option value="<%= h(t) %>"><%= h(t) %></option><% end %>
+      </select>
+    </div>
+    <div class="field">
+      <label>Emne</label>
+      <input type="text" name="subject" required maxlength="200" placeholder="Tilbud på skjermer — {{navn}}">
+    </div>
+    <div class="field full">
+      <label>Melding (bruk {{navn}}, {{firma}}, {{epost}})</label>
+      <textarea name="body" rows="8" required placeholder="Hei {{navn}}!&#10;&#10;Vi har nettopp fått inn Dell-skjermer til en knallpris...">{{navn}}, du får gjerne ta en titt!</textarea>
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn primary big">Sett i kø (rettler sendes i bakgrunnen)</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Grupper (tags) i bruk</h2>
+  <ul class="activity">
+    <% @tags.each do |t| %><li><span class="tag"><%= h(t) %></span></li><% end %>
+    <% if @tags.empty? %><li class="muted">Ingen tags ennå — legg til tags på kontakter for å kunne sende til en gruppe.</li><% end %>
+  </ul>
+  <p class="muted small">Totalt <%= @contact_count %> kontakter.</p>
+</section>

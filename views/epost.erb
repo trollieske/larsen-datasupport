@@ -1,0 +1,36 @@
+<h1>E-post — outbox</h1>
+
+<div class="cards">
+  <section class="card"><h2>I kø</h2><p class="big-num"><%= @queued %></p>
+    <form method="post" action="/epost/flush"><button class="btn primary" type="submit">Send alt nå</button></form>
+  </section>
+  <section class="card">
+    <h2>Slik fungerer det</h2>
+    <p class="muted small">Automatiske e-poster (faktura, innlogging, nyhetsbrev) legges i kø her og sendes i bakgrunnen hvert 20. sekund. Uten SMTP oppsatt logges de bare til serverens stdout — perfekt for utvikling. Sett opp SMTP i <a href="/innstillinger">Innstillinger</a> for ekte utsending.</p>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Nylige e-poster</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead><tr><th>Til</th><th>Emne</th><th>Type</th><th>Status</th><th>Feil</th><th>Opprettet</th></tr></thead>
+      <tbody>
+        <% @emails.each do |e| %>
+          <tr>
+            <td><%= h(e["to_address"]) %></td>
+            <td><%= h(e["subject"]) %></td>
+            <td><span class="tag"><%= h(e["kind"]) %></span></td>
+            <td>
+              <% cls = { "queued" => "", "sent" => "good", "logged" => "", "failed" => "danger" }[e["status"]] %>
+              <span class="status <%= cls %>"><%= h(e["status"]) %></span>
+            </td>
+            <td class="muted small"><%= h(e["error"]) %></td>
+            <td class="muted"><%= h(fmt_dt(e["created_at"])) %></td>
+          </tr>
+        <% end %>
+        <% if @emails.empty? %><tr><td colspan="6" class="muted">Ingen e-poster ennå.</td></tr><% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

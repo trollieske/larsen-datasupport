@@ -1,0 +1,14 @@
+<main class="public-card">
+  <h1>Min side</h1>
+  <% if @user %>
+    <p class="muted">Logget inn som <strong><%= h(@user["name"] || @user["email"]) %></strong> (<%= h(@user["email"]) %>) via <%= @user["provider"] %>.</p>
+    <p class="muted small">Siste innlogging: <%= h(fmt_dt(@user["last_login_at"])) %></p>
+    <div class="actions" style="justify-content:center">
+      <a class="btn primary" href="/butikk">Se butikken</a>
+      <a class="btn" href="/logout">Logg ut</a>
+    </div>
+  <% else %>
+    <p class="muted">Du er ikke logget inn.</p>
+    <a class="btn primary" href="/login">Logg inn</a>
+  <% end %>
+</main>

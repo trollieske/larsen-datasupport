@@ -1,36 +1,35 @@
-<!DOCTYPE html>
-<html lang="no">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title><%= h(@item['name']) %> — <%= h(@company_name) %></title>
-<link rel="icon" href="data:,">
-<link rel="stylesheet" href="/style.css">
-</head>
-<body class="public-page">
-<main class="public-card">
-  <div class="ph" aria-hidden="true"><%= CATEGORY_EMOJI.fetch(@item['category'], "📦") %></div>
+<main class="public-card product-card">
+  <% if @item['photo'] %>
+    <div class="product-photo"><img src="/upload/<%= @item['photo'] %>" alt="<%= h(@item['name']) %>"></div>
+  <% else %>
+    <div class="ph"><%= CATEGORY_EMOJI.fetch(@item['category'], "📦") %></div>
+  <% end %>
   <span class="tag"><%= h(@item['category']) %></span>
   <h1><%= h(@item['name']) %></h1>
   <% unless @item['notes'].to_s.empty? %>
     <p class="muted"><%= h(@item['notes']) %></p>
   <% end %>
-  <p class="price"><%= format_kr(@item['sale_price']) %></p>
 
   <% if @item['quantity_in_stock'].to_i <= 0 %>
-    <p class="soldout">Utsolgt</p>
-  <% else %>
+    <p class="soldout">Utsolgt — spør gjerne om nytt inn</p>
+    <% if @logged_in %>
+      <a class="btn" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i ny: #{@item['name']}") %>">💬 Spør om nytt inn</a>
+    <% end %>
+  <% elsif @price_shown %>
+    <p class="price"><%= format_kr(@item['sale_price']) %></p>
     <div class="actions" style="justify-content:center">
-      <a class="btn primary big" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i: #{@item['name']}") %>&body=<%= urlq("Hei! Jeg er interessert i «#{@item['name']}» til #{format_kr(@item['sale_price'])}.") %>">
-        💬 Interessert — send e-post
-      </a>
+      <a class="btn primary big" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i: #{@item['name']}") %>&body=<%= urlq("Hei! Jeg er interessert i «#{@item['name']}» til #{format_kr(@item['sale_price'])}.") %>">💬 Interessert — send e-post</a>
     </div>
     <% unless @vipps.empty? %>
       <p class="muted">…eller Vipps direkte til <strong><%= h(@vipps) %></strong></p>
     <% end %>
+  <% else %>
+    <div class="price-locked">
+      <p class="price">🔒 Pris</p>
+      <p class="muted">Logg inn for å se innkjøpspriser og være først ute.</p>
+      <a class="btn primary big" href="/login?next=/vare/<%= @item['id'] %>">Logg inn for pris</a>
+    </div>
   <% end %>
 
-  <p class="muted footer-line"><%= h(@company_name) %></p>
+  <p class="muted footer-line"><%= h(@shop_title) %></p>
 </main>
-</body>
-</html>

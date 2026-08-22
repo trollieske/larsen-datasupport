@@ -1,0 +1,28 @@
+<h1><%= h(@contact["name"]) %></h1>
+<p class="muted">
+  <%= h(@contact["email"]) %> · <%= h(@contact["phone"]) %>
+  <% @contact["tags"].to_s.split(/\s*,\s*/).reject(&:empty?).each do |t| %><span class="tag"><%= h(t) %></span><% end %>
+</p>
+
+<% if @events.empty? %>
+  <section class="card"><p class="muted">Ingen aktivitet på denne kontakten ennå.</p></section>
+<% else %>
+  <section class="card">
+    <h2>Tidslinje</h2>
+    <ul class="timeline">
+      <% @events.each do |e| %>
+        <li class="tl-item">
+          <span class="tl-icon"><%= e[:icon] %></span>
+          <div class="tl-body">
+            <p class="tl-text"><%= h(e[:text]) %></p>
+            <p class="tl-sub muted"><%= h(e[:sub]) %></p>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+<% end %>
+<div class="actions">
+  <a class="btn" href="/kontakter">← Alle kontakter</a>
+  <a class="btn" href="/kontakter?edit=<%= @contact['id'] %>">Rediger</a>
+</div>
