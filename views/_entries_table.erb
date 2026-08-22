@@ -1,0 +1,49 @@
+<div class="table-wrap">
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Start</th>
+        <th>Slutt</th>
+        <th class="num">Varighet</th>
+        <th>Kunde</th>
+        <th>Beskrivelse</th>
+        <th class="num">Beløp</th>
+        <th class="no-print"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @entries.each do |e| %>
+        <tr>
+          <td><%= h(fmt_dt(e["started_at"])) %></td>
+          <td class="muted"><%= e["ended_at"] ? h(fmt_dt(e["ended_at"])) : "pågår" %></td>
+          <td class="num"><%= fmt_minutes(e["minutes"]) %></td>
+          <td><%= h(e["customer_name"] || "Generisk / internt") %></td>
+          <td class="muted">
+            <%= h(e["description"]) %>
+            <% unless e["billable"].to_i == 1 %><span class="tag">ikke fakturerbar</span><% end %>
+          </td>
+          <td class="num"><%= format_kr(e["amount_ore"]) %></td>
+          <td class="no-print">
+            <form method="post" action="/timer/<%= e['id'] %>/delete" onsubmit="return confirm('Slette registreringen?')">
+              <button class="btn small danger" title="Slett">✕</button>
+            </form>
+          </td>
+        </tr>
+      <% end %>
+      <% if @entries.empty? %>
+        <tr><td colspan="7" class="muted">Ingen registreringer i dette utvalget.</td></tr>
+      <% end %>
+    </tbody>
+    <% unless @entries.empty? %>
+      <tfoot>
+        <tr>
+          <td colspan="2">Sum</td>
+          <td class="num"><strong><%= fmt_minutes(@totals[:minutes]) %></strong></td>
+          <td colspan="2"></td>
+          <td class="num"><strong><%= format_kr(@totals[:amount_ore]) %></strong></td>
+          <td class="no-print"></td>
+        </tr>
+      </tfoot>
+    <% end %>
+  </table>
+</div>

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faktura <%= h(@invoice[:ref]) %></title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body class="print-page">
+<div class="invoice">
+  <header class="invoice-head no-print">
+    <button class="btn primary" onclick="window.print()">🖨 Skriv ut / Lag PDF</button>
+    <a class="btn" href="/faktura">← Tilbake</a>
+  </header>
+
+  <div class="invoice-body">
+    <div class="inv-top">
+      <div>
+        <h1 style="margin-top:0"><%= h(@invoice[:company_name]) %></h1>
+        <p class="muted">Org.nr: <%= h(@invoice[:company_org]) %></p>
+        <% unless @invoice[:company_account].empty? %><p class="muted">Kontonummer: <%= h(@invoice[:company_account]) %></p><% end %>
+        <% unless @invoice[:company_vipps].empty? %><p class="muted">Vipps: <%= h(@invoice[:company_vipps]) %></p><% end %>
+      </div>
+      <div class="inv-meta">
+        <p><strong>Faktura <%= h(@invoice[:ref]) %></strong></p>
+        <p>Dato: <%= h(fmt_date(@invoice[:invoiced_at])) %></p>
+        <p class="muted">Forfall: 14 dager</p>
+      </div>
+    </div>
+
+    <div class="inv-customer">
+      <h2 style="margin:0 0 .3rem"><%= h(@invoice[:customer_name]) %></h2>
+      <% unless @invoice[:org_number].to_s.empty? %>
+        <p class="muted" style="margin:0">Org.nr: <%= h(@invoice[:org_number]) %></p>
+      <% end %>
+    </div>
+
+    <table class="table inv-table">
+      <thead>
+        <tr><th>Dato</th><th>Beskrivelse</th><th class="num">Detaljer</th><th class="num">Beløp</th></tr>
+      </thead>
+      <tbody>
+        <% @invoice[:rows].each do |r| %>
+          <tr>
+            <td><%= h(r[:date]) %></td>
+            <td><%= h(r[:text]) %></td>
+            <td class="num"><%= r[:rate] ? h(r[:detail]) + " @ " + format_kr(r[:rate]) + "/t" : h(r[:detail]) %></td>
+            <td class="num"><%= format_kr(r[:amount]) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+      <tfoot>
+        <tr><td colspan="3" class="num">Sum uten mva</td><td class="num"><%= format_kr(@invoice[:subtotal]) %></td></tr>
+        <tr><td colspan="3" class="num">Mva (<%= mva_percent %> %)</td><td class="num"><%= format_kr(@invoice[:mva]) %></td></tr>
+        <tr class="total-row"><td colspan="3" class="num">Totalt</td><td class="num"><%= format_kr(@invoice[:total]) %></td></tr>
+      </tfoot>
+    </table>
+
+    <p class="muted inv-note">
+      Takk for handelen! Betaling merkes med <strong><%= h(@invoice[:ref]) %></strong>.
+    </p>
+  </div>
+</div>
+</body>
+</html>

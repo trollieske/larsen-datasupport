@@ -1,0 +1,5 @@
+.env
+data/
+vendor/bundle/
+*.log
+.DS_Store

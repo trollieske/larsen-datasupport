@@ -1,0 +1,27 @@
+# Fly.io-konfigurasjon — gratis tier.
+# Første deploy: fly launch --now, deretter fly secrets set APP_PASSWORD="..."
+app = "larsen-datasupport"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  RACK_ENV = "production"
+
+# Persistent SQLite: opprett volumet med `fly volume create larsen_data --region ams --size 1`
+[mounts]
+  source = "larsen_data"
+  destination = "/app/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  # Gratis-drift: maskinen sover når den ikke brukes, våkner på nytt trafikk.
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

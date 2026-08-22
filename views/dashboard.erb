@@ -1,0 +1,43 @@
+<div class="cards">
+  <section class="card">
+    <h2>Denne måneden</h2>
+    <p class="big-num"><%= format_kr(@month_amount) %></p>
+    <p class="muted"><%= fmt_minutes(@month_minutes) %> fakturerbare timer</p>
+  </section>
+  <section class="card">
+    <h2>Ufakturert — penger som ligger og venter</h2>
+    <p class="big-num"><%= format_kr(@uninvoiced_total) %></p>
+    <p class="muted">inkl. mva · <%= format_kr(@uninvoiced_subtotal) %> uten mva</p>
+  </section>
+  <section class="card">
+    <h2>Kjapt blikk</h2>
+    <ul class="quick">
+      <li><%= @customer_count %> kunder</li>
+      <li><%= @stock_count %> varer på lager</li>
+      <li>
+        <% if @active %>
+          ⏱️ Aktiv timer: <strong><%= h(@active["customer_name"] || "Generisk / internt") %></strong>
+        <% else %>
+          Ingen aktiv timer
+        <% end %>
+      </li>
+    </ul>
+    <div class="actions">
+      <a class="btn primary" href="/timer">Til timeregistrering</a>
+      <a class="btn" href="/faktura">Se hva som kan faktureres</a>
+    </div>
+  </section>
+</div>
+
+<section class="card">
+  <h2>Siste aktivitet</h2>
+  <% if @activity.empty? %>
+    <p class="muted">Ingenting ennå — start en timer eller registrer et salg.</p>
+  <% else %>
+    <ul class="activity">
+      <% @activity.each do |a| %>
+        <li><span class="muted"><%= h(fmt_dt(a[:at])) %></span> <%= h(a[:text]) %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

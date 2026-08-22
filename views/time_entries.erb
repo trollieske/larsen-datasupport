@@ -1,0 +1,94 @@
+<h1>Timeregistrering</h1>
+
+<%= erb :timer_active, layout: false if @active %>
+
+<section class="card">
+  <h2>Start timer</h2>
+  <form method="post" action="/timer/start" class="form-row">
+    <div class="field">
+      <label for="cust">Kunde</label>
+      <select id="cust" name="customer_id">
+        <option value="">Generisk / internt</option>
+        <% @customers.each do |c| %>
+          <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="field grow">
+      <label for="desc">Beskrivelse</label>
+      <input id="desc" type="text" name="description" placeholder="F.eks. oppsett av ny PC" maxlength="200">
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn primary big">▶ Start timer</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Manuell registrering</h2>
+  <p class="muted small">For når du glemte å starte timeren: fyll inn varighet i minutter <em>eller</em> start- og sluttidspunkt.</p>
+  <form method="post" action="/timer/manual" class="grid-form">
+    <div class="field">
+      <label for="mcust">Kunde</label>
+      <select id="mcust" name="customer_id">
+        <option value="">Generisk / internt</option>
+        <% @customers.each do |c| %>
+          <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+        <% end %>
+      </select>
+    </div>
+    <div class="field">
+      <label for="mdate">Dato</label>
+      <input id="mdate" type="date" name="date" value="<%= Date.today.iso8601 %>" required>
+    </div>
+    <div class="field">
+      <label for="mstart">Start (klokkeslett)</label>
+      <input id="mstart" type="time" name="start_time">
+    </div>
+    <div class="field">
+      <label for="mend">Slutt (klokkeslett)</label>
+      <input id="mend" type="time" name="end_time">
+    </div>
+    <div class="field">
+      <label for="mmin">…eller antall minutter</label>
+      <input id="mmin" type="number" name="minutes" min="1" placeholder="90">
+    </div>
+    <div class="field">
+      <label for="mdesc">Beskrivelse</label>
+      <input id="mdesc" type="text" name="description" maxlength="200">
+    </div>
+    <div class="field">
+      <label class="check">
+        <input type="hidden" name="billable" value="0">
+        <input type="checkbox" name="billable" value="1" checked> Fakturerbart
+      </label>
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn">Legg til</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Registrerte timer</h2>
+    <form id="filter" hx-get="/timer/entries" hx-target="#entries" hx-swap="innerHTML">
+      <select name="period" hx-trigger="change" hx-include="closest form">
+        <option value="today" <%= "selected" if params[:period] == "today" %>>I dag</option>
+        <option value="week" <%= "selected" if params[:period].to_s.empty? || params[:period] == "week" %>>Denne uken</option>
+        <option value="month" <%= "selected" if params[:period] == "month" %>>Denne måneden</option>
+        <option value="all" <%= "selected" if params[:period] == "all" %>>Alt</option>
+      </select>
+      <select name="customer" hx-trigger="change" hx-include="closest form">
+        <option value="">Alle kunder</option>
+        <option value="none" <%= "selected" if params[:customer] == "none" %>>Generisk / internt</option>
+        <% @customers.each do |c| %>
+          <option value="<%= c['id'] %>" <%= "selected" if params[:customer] == c['id'].to_s %>><%= h(c['name']) %></option>
+        <% end %>
+      </select>
+    </form>
+  </div>
+  <div id="entries">
+    <%= erb :_entries_table, layout: false %>
+  </div>
+</section>

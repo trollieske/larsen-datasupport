@@ -1,0 +1,41 @@
+<h1>Innstillinger</h1>
+
+<section class="card narrow">
+  <form method="post" action="/innstillinger" class="grid-form">
+    <div class="field">
+      <label>Standard timepris (kr/time)</label>
+      <input type="text" name="default_rate_ore" inputmode="decimal" value="<%= kr_input(setting('default_rate_ore')) %>">
+    </div>
+    <div class="field">
+      <label>Mva-sats (%)</label>
+      <input type="number" name="mva_percent" min="0" max="100" value="<%= mva_percent %>">
+    </div>
+    <div class="field">
+      <label>Firmanavn</label>
+      <input type="text" name="company_name" value="<%= h(setting('company_name')) %>">
+    </div>
+    <div class="field">
+      <label>Org.nr</label>
+      <input type="text" name="org_number" value="<%= h(setting('org_number')) %>">
+    </div>
+    <div class="field">
+      <label>Kontonummer (for faktura)</label>
+      <input type="text" name="account_number" value="<%= h(setting('account_number')) %>">
+    </div>
+    <div class="field">
+      <label>Vipps-nummer (for faktura og varesider)</label>
+      <input type="text" name="vipps" value="<%= h(setting('vipps')) %>">
+    </div>
+    <div class="field">
+      <label>Kontakt-e-post (brukes i «Interessert»-knappen på delbare varesider)</label>
+      <input type="email" name="contact_email" value="<%= h(setting('contact_email')) %>">
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn primary">Lagre innstillinger</button>
+    </div>
+  </form>
+  <p class="muted small">
+    Pålogging settes med miljøvariabelen <code>APP_PASSWORD</code> — se <code>.env.example</code>.
+    Uten passord er appen åpen (bra for lokal utvikling).
+  </p>
+</section>

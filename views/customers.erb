@@ -1,0 +1,120 @@
+<h1>Kunder</h1>
+
+<% if @edit_customer %>
+  <section class="card">
+    <h2>Rediger kunde: <%= h(@edit_customer["name"]) %></h2>
+    <form method="post" action="/kunder/<%= @edit_customer['id'] %>" class="grid-form">
+      <div class="field">
+        <label>Navn</label>
+        <input type="text" name="name" value="<%= h(@edit_customer['name']) %>" required maxlength="200">
+      </div>
+      <div class="field">
+        <label>Org.nr</label>
+        <input type="text" name="org_number" value="<%= h(@edit_customer['org_number']) %>">
+      </div>
+      <div class="field">
+        <label>Kontaktperson</label>
+        <input type="text" name="contact_person" value="<%= h(@edit_customer['contact_person']) %>">
+      </div>
+      <div class="field">
+        <label>E-post</label>
+        <input type="email" name="email" value="<%= h(@edit_customer['email']) %>">
+      </div>
+      <div class="field">
+        <label>Telefon</label>
+        <input type="text" name="phone" value="<%= h(@edit_customer['phone']) %>">
+      </div>
+      <div class="field">
+        <label>Timepris (kr) — tom = standardpris</label>
+        <input type="text" name="hourly_rate_override" inputmode="decimal" value="<%= kr_input(@edit_customer['hourly_rate_override']) %>">
+      </div>
+      <div class="field">
+        <label>Notater</label>
+        <input type="text" name="notes" value="<%= h(@edit_customer['notes']) %>" maxlength="300">
+      </div>
+      <div class="field align-end">
+        <div class="actions">
+          <button type="submit" class="btn primary">Lagre endringer</button>
+          <a class="btn" href="/kunder">Avbryt</a>
+        </div>
+      </div>
+    </form>
+  </section>
+<% end %>
+
+<section class="card">
+  <h2>Legg til kunde</h2>
+  <form method="post" action="/kunder" class="grid-form">
+    <div class="field">
+      <label>Navn</label>
+      <input type="text" name="name" required maxlength="200" placeholder="Berg &amp; Dahl Regnskap AS">
+    </div>
+    <div class="field">
+      <label>Org.nr</label>
+      <input type="text" name="org_number" placeholder="912345678">
+    </div>
+    <div class="field">
+      <label>Kontaktperson</label>
+      <input type="text" name="contact_person">
+    </div>
+    <div class="field">
+      <label>E-post</label>
+      <input type="email" name="email">
+    </div>
+    <div class="field">
+      <label>Telefon</label>
+      <input type="text" name="phone">
+    </div>
+    <div class="field">
+      <label>Timepris (kr) — tom = bruk standardpris</label>
+      <input type="text" name="hourly_rate_override" inputmode="decimal" placeholder="900">
+    </div>
+    <div class="field">
+      <label>Notater</label>
+      <input type="text" name="notes" maxlength="300">
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn primary">Legg til kunde</button>
+    </div>
+  </form>
+</section>
+
+<section class="card">
+  <h2>Kundeliste</h2>
+  <div class="table-wrap">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Navn</th>
+          <th>Org.nr</th>
+          <th>Kontakt</th>
+          <th>E-post</th>
+          <th>Telefon</th>
+          <th class="num">Timepris</th>
+          <th class="no-print"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @customers.each do |c| %>
+          <tr>
+            <td><strong><%= h(c['name']) %></strong></td>
+            <td class="muted"><%= h(c['org_number']) %></td>
+            <td class="muted"><%= h(c['contact_person']) %></td>
+            <td class="muted"><%= h(c['email']) %></td>
+            <td class="muted"><%= h(c['phone']) %></td>
+            <td class="num"><%= c['hourly_rate_override'] ? format_kr(c['hourly_rate_override']) : '—' %></td>
+            <td class="no-print actions-cell">
+              <a class="btn small" href="/kunder?edit=<%= c['id'] %>">Rediger</a>
+              <form method="post" action="/kunder/<%= c['id'] %>/delete" onsubmit="return confirm('Slette <%= js(c['name']) %>?')">
+                <button class="btn small danger" title="Slett">✕</button>
+              </form>
+            </td>
+          </tr>
+        <% end %>
+        <% if @customers.empty? %>
+          <tr><td colspan="7" class="muted">Ingen kunder ennå.</td></tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>

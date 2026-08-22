@@ -1,0 +1,17 @@
+<section class="card active-card">
+  <div class="active-info">
+    <span class="pulse" aria-hidden="true"></span>
+    <div>
+      <h2>Pågående timer</h2>
+      <p>
+        <strong><%= h(@active["customer_name"] || "Generisk / internt") %></strong>
+        <% unless @active["description"].to_s.empty? %>— <%= h(@active["description"]) %><% end %>
+      </p>
+      <p class="elapsed"><%= erb :_elapsed_span, layout: false, locals: { active: @active } %></p>
+      <p class="muted">Startet <%= h(fmt_dt(@active["started_at"])) %></p>
+    </div>
+  </div>
+  <form method="post" action="/timer/stop" class="no-print">
+    <button type="submit" class="btn danger big">■ Stopp timer</button>
+  </form>
+</section>

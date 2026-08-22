@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title><%= @title ? h(@title) + " · " : "" %>Larsen Datasupport</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/style.css">
+<script src="https://unpkg.com/htmx.org@2.0.4" defer></script>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">🔧</span> Larsen Datasupport</div>
+  <nav>
+    <a href="/" <%= nav_active("/") %>>Oversikt</a>
+    <a href="/timer" <%= nav_active("/timer") %>>Timer</a>
+    <a href="/faktura" <%= nav_active("/faktura") %>>Faktura</a>
+    <a href="/hardware" <%= nav_active("/hardware") %>>Hardware</a>
+    <a href="/kunder" <%= nav_active("/kunder") %>>Kunder</a>
+    <a href="/innstillinger" <%= nav_active("/innstillinger") %>>Innstillinger</a>
+  </nav>
+</header>
+
+<main class="container">
+  <% if @notice %>
+    <div class="flash" role="status"><%= h(@notice) %></div>
+  <% end %>
+  <%= yield %>
+</main>
+
+<footer class="footer">
+  <p>Larsen Datasupport · Internt verktøy · Databasen er én fil: <code>data/larsen.db</code></p>
+</footer>
+</body>
+</html>

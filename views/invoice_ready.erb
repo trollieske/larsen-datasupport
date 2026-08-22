@@ -1,0 +1,88 @@
+<h1>Klar for fakturering</h1>
+
+<% if @groups.empty? %>
+  <section class="card">
+    <p class="muted">Ingenting å fakturere akkurat nå 🎉</p>
+  </section>
+<% else %>
+  <% @groups.each do |_key, g| %>
+    <section class="card invoice-group">
+      <div class="card-head">
+        <h2><%= h(g[:customer_name]) %></h2>
+        <form method="post" action="/faktura/mark/<%= g[:key] %>" onsubmit="return confirm('Opprette faktura for <%= js(g[:customer_name]) %>?')">
+          <button type="submit" class="btn primary">Merk som fakturert</button>
+        </form>
+      </div>
+      <% unless g[:org_number].to_s.empty? %>
+        <p class="muted small">Org.nr: <%= h(g[:org_number]) %></p>
+      <% end %>
+
+      <% unless g[:entries].empty? %>
+        <h3>Timer</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Dato</th><th>Beskrivelse</th><th class="num">Varighet</th><th class="num">Beløp</th></tr>
+            </thead>
+            <tbody>
+              <% g[:entries].each do |e| %>
+                <tr>
+                  <td><%= h(fmt_date(e["started_at"])) %></td>
+                  <td><%= h(e["description"]) %></td>
+                  <td class="num"><%= fmt_minutes(e["minutes"]) %></td>
+                  <td class="num"><%= format_kr(e["amount_ore"]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+
+      <% unless g[:sales].empty? %>
+        <h3>Hardware-salg</h3>
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr><th>Dato</th><th>Vare</th><th class="num">Antall</th><th class="num">Pris/stk</th><th class="num">Beløp</th></tr>
+            </thead>
+            <tbody>
+              <% g[:sales].each do |s| %>
+                <tr>
+                  <td><%= h(fmt_date(s["sold_at"])) %></td>
+                  <td><%= h(s["item_name"]) %></td>
+                  <td class="num"><%= s["quantity"] %></td>
+                  <td class="num"><%= format_kr(s["sale_price_each"]) %></td>
+                  <td class="num"><%= format_kr(s["amount_ore"]) %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% end %>
+
+      <div class="invoice-sum">
+        <div><span>Timer</span><span class="num"><%= format_kr(g[:time_amount]) %></span></div>
+        <div><span>Hardware</span><span class="num"><%= format_kr(g[:sale_amount]) %></span></div>
+        <div><span>Sum uten mva</span><span class="num"><%= format_kr(g[:subtotal]) %></span></div>
+        <div><span>Mva (<%= mva_percent %> %)</span><span class="num"><%= format_kr(g[:mva]) %></span></div>
+        <div class="total"><span>Totalt</span><span class="num"><%= format_kr(g[:total]) %></span></div>
+      </div>
+    </section>
+  <% end %>
+<% end %>
+
+<section class="card">
+  <h2>Siste fakturaer</h2>
+  <% if @recent.empty? %>
+    <p class="muted">Ingen fakturaer ennå — fakturer over, så dukker de opp her.</p>
+  <% else %>
+    <ul class="activity">
+      <% @recent.each do |ref, at| %>
+        <li>
+          <a href="/faktura/print?ref=<%= ref %>"><%= h(ref) %></a>
+          <span class="muted">· <%= h(fmt_date(at)) %></span>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>
