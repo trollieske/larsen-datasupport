@@ -3,3 +3,4 @@ data/
 vendor/bundle/
 *.log
 .DS_Store
+.bundle/
