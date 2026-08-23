@@ -53,6 +53,17 @@ Autentisering: HTTP Basic Auth, `APP_PASSWORD` env; `/vare/*` og `/upload/*` all
 - Penger: INTEGER ØRE. Datoer: UTC i DB, Europe/Oslo i visning.
 - Testserver i gang NÅ: `0.0.0.0:4567` med `APP_PASSWORD="lol"`.
 - Windows-pc nås via **SSH-tunnel:** `ssh -L 4567:localhost:4567 ck2k@192.168.0.152` → åpne `http://localhost:4567` (brukernavn: vilkårlig, passord `lol`). Nettleser-proxy blokkerer direkte-LAN til port 4567; SSH fungerer. Status: ✅ VELYKKET — brukeren fikk det til!
+- **MOBIL-TILGANG (2026-08-23):** Cloudflare quick tunnels (`cloudflared tunnel --url ...`) ER ØDELAGT — edge returnerer "Host not permitted" (403 med cf-ray) fordi hostname→connector-mappingen aldri registerer seg (testet 2026.8.2 OG 2025.2.0, quic og http2, også utenfra via r.jina.ai). Ikke kast tid på det igjen!
+  **Bruk Tailscale i stedet (allerede pålogget på denne maskinen, konto tomeriklarsen1@gmail.com):**
+  ```bash
+  # På mobilen: installér Tailscale-appen, logg inn med samme Google-konto, så åpne:
+  #   http://100.84.216.12:4567   (eller http://omathinkpad:4567)
+  # Innlogging i appen: brukernavn hva som helst + passord lol
+  # WireGuard-kryptert mellom mobil og PC uansett — HTTP i app-laget er ok.
+  # Mulig oppgradering til HTTPS (krever ETT klikk fra eier):
+  #   åpne https://login.tailscale.com/f/serve?node=nv6Wd8kxCw11CNTRL → aktiver Serve
+  #   deretter: tailscale serve --bg http://127.0.0.1:4567  → https://omathinkpad.tailbdf206.ts.net
+  ```
 
 ## 4. HVA SOM ER FERDIG OG KONTRAKTERT
 
