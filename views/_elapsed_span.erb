@@ -1,1 +1,22 @@
-<span id="elapsed" hx-get="/timer/elapsed" hx-trigger="every 10s" hx-swap="outerHTML"><%= elapsed_display(active["started_at"]) %></span>
+<span id="elapsed"
+      data-start="<%= Time.iso8601(active["started_at"]).to_i %>"
+      hx-get="/timer/elapsed" hx-trigger="every 5s" hx-swap="outerHTML"><%= elapsed_display(active["started_at"]) %></span>
+<script>
+// Lokal nedtelling — timer-en tikkker med 100 % sikkerhet, uavhengig av HTMX/cache/CDN.
+(function(){
+  var el = document.getElementById('elapsed');
+  if (!el) return;
+  var start = parseInt(el.dataset.start, 10);
+  if (!(start > 0)) return;
+  function pad(n){ return (n<10?'0':'')+n; }
+  function paint(){
+    var now = Math.floor(Date.now()/1000);
+    var d = Math.max(0, now - start);
+    var h = Math.floor(d/3600), m = Math.floor((d%3600)/60), s = d%60;
+    var txt = pad(h)+':'+pad(m)+':'+pad(s);
+    el.textContent = txt;
+  }
+  paint();
+  setInterval(paint, 1000);
+})();
+</script>
