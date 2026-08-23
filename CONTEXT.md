@@ -1,5 +1,5 @@
 # Larsen Datasupport — KOMPLETT KONTEXT / FREMDRIKT
-*Sist oppdatert: 2026-08-23 ~09:50 (OCR-import kontakt fullført)*
+*Sist oppdatert: 2026-08-23 ~17:00 (UX-iterasjon fullført + lager som operativ oversikt)*
 
 > Dette dokumentet er den evige "tråden". Hvis vi starter på nytt, les DETTE først —
 > alt av v1, videreutviklingsplanen og tekniske lærdommer står her.
@@ -24,6 +24,8 @@ superenkel, skalerbar, for nerds OG vanlige folk. Ekte produkt, ikke øvelse.
 | Git-repo klar (commit "Første versjon...") | ✅ FERDIG (3 commits totalt) |
 | 🔄 Inventory-geniet (kortvegg + foto + HTMX) | 🔄 **PÅGÅR — HALVVEIS (se §5)** |
 | **v4-redesign** (profilsystem, SVG-ikoner, lys/mørk) | ✅ FERDIG + VERIFISERT — commits 46924e7/442186c |
+| **UX-iterasjon** (kompakt timerflyt, hurtig arbeidsflate) | ✅ FERDIG + PUSHED — a66d295 (§10) |
+| **Lager som operativ oversikt** (ikke webshop) | ✅ FERDIG + PUSHED — c0b33ff (§11) |
 | Webshop + prisinlogging (Google + magisk lenke) | ⏭ neste |
 | Auto-e-post fakturautsending (outbox-mønster) | ⏭ (emails-tabell allerede lagt til!) |
 | CRM-som-ikke-er-CRM (Kontakter + OCR-import fra skjermbilde) | ✅ FERDIG + VERIFISERT |
@@ -187,3 +189,60 @@ sleep 4; curl -s http://127.0.0.1:4567/health
 - **Dashboard «Neste grep»:** 5 suggestion-ka.
 - **Auto-sync:** kunde opprettet/oppdatert → kontakt (match på e-post, unik-avderburg).
 - Verifisert: alle hoved-ruter 200; bilder-Niest + commit + text-OCR virker ende-til-ende; DB-rydset for testimport.
+
+## 11. ✓ UX-ITERASJON — KOMPLETT (2026-08-23 ~17:00, pushed a66d295 + c0b33ff)
+
+**Prompt:** `PROMPT_UX_ITERASJON.md` i repoet (committet som 0a792db, hentet fra GitHub).
+Mål: raskt personlig business-cockpit — mindre skjema, færre trykk, informasjon kun når relevant. Timeren ikke lenger permanent hovedflate.
+
+### Hva som ble endret og VERIFISERT:
+
+**Timer** (`views/time_entries.erb`, `_timer_bar.erb` NY, `_entries_table.erb`)
+- Inaktiv: kompakt 44–48px «Start timer» → åpner **bottom-sheet** (Kunde + Beskrivelse + Start). Manuell registrering sekundær under «Flere valg».
+- Aktiv: **slank vedvarende bar** (`_timer_bar.erb`) under header på Oversikt, Timer, Faktura OG Lager: statusdot, kunde, beskriv, tabulær tid, Stopp. Trykkbar → detaljer. Max 2 rader mobil. `back`-param i stopp-form → returneres til siden man var på.
+- «I dag» (today-strip): timer/beløp/antall. Kompakte rader (row-list) med kunde/beskriv/varighet/beløp og **«Gjenta»** (re-åpner sheet forhåndsvalgt kunde+bekrivelse).
+- Ingen parallelle timere (server-side håndhevelse beholdt).
+
+**Oversikt** (`views/dashboard.erb`)
+- Max to handlinger: «Start timer» primær, «Registr salg» sekundær (→ /hardware).
+- Rekkefølge: aktive-timer-bar → handlinger → KPI → grafer → «Trenger oppfølging» → maks 5 siste aktiviteter.
+- KPI 1 «Denne måneden», KPI 2 «Ufakturert», KPI 3 **«Lagerverdi»** (ny `@stock_value` = SUM(cost*quantity) i app.rb).
+- Tom-tilstand for aktivitet («Ingenting ennå…»).
+
+**Faktura** (`invoice_ready.erb` omskrevet)
+- Kundekort: navn, ufakturert-total, antall timer og varer, «Klarfør faktura».
+- Timerader og MVA-grunnlag bak **«Vis grunnlag»** (details).
+- Segmented filter: **Klar nå / Fakturert / Alle** (ren JS).
+
+**Lager** → se §12.
+
+### Tekniske læresetninger (UX)
+- `hx?` helper: HTMX-fragmenter returnerer `erb :_cards, layout:false` e.l. — ikke bryte htmx-attributtene på POST.
+- **Bunn-sheets:** `position:fixed` + `.sheet-card`, scrim over content. Mobile: `bottom:calc(80px+safe-area)` (over bottom-nav).
+- **JS-click-handlers MÅ være document-level (`.closest()`) for å overleve HTMX-swap** av `#cards` — element-liste-handlers døde ved innbytte.
+- `_item_form.erb` (delt ny/rediger-skjema) må sjekke `defined?(hx)` — i rediger-rute er `hx` ikke satt.
+- `format_kr`/`kr_input` = norsk tallformat (5 000 kr). IKKE endre loggerikk.
+
+## 12. ✓ LAGER → OPERATIV OVERSIKT (2026-08-23 ~17:10, c0b33ff + b325647)
+
+Bruker: «lageroversikten ser mer ut som en webshop enn inventory … trenger ikke store bilder, heller state of the art oversikt.»
+
+**Endring:** kortvegg (store 150px-bilder, webshop-preg) → **tett operativ liste** (små 38px-miniatyr, ikke store bilde): navn, kategori+varenr, salgspris, fortjeneste/stk, lagerbadge, handlinger (Selg/Rediger/⋮-meny Kopier/Slett). Kolonne-header på desktop. Mobil: rader legg opp, handlinger nederst.
+
+- `views/_cards.erb` omskrevet: `.stock-list/.stock-row` (ikke lenger `.card-grid`/`.item-card`).
+- `public/style.css`: `.stock-head/.stock-row/.stock-thumb/.stock-badge` osv. Mobile media-query ≤760px.
+- Fjernet: `.stats-strip`, `.card-grid`, `.item-*`, `.sell-details/.sell-form`, `.img-count` etc.
+
+### Salg → automatisk lageruttrekk: VERIFISERT
+- Route `POST /hardware/:id/sell` (app.rb ~L888):
+  `UPDATE hardware_items SET quantity_in_stock = quantity_in_stock - ?, sold_quantity = sold_quantity + ?` + INSERT `hardware_sales`.
+- Test: la til vare (qty=2) → solgte 1 (2→1) → solgte 1 til (0, Utsolgt/rød badge) → DB bekreftet.
+
+**Forms:** ny/rediger-flykt separat (Produkt/Pris/Lager) `views/_item_form.erb`. Søk + På lager/Utsolgt/Alle-select HTMX (`render_cards!(q:, status:)` + helper `filtered_items(q,status)`).
+
+**Test:** alle hoved-ruter + HTMX 200, logg ren. GitHub pushed (b325647).
+
+## 13. NESTE STEG
+- **Webshop full** Google + magisk lenke (outbox alt). SMTP-oppsett mangler.
+- **Faktura-til-CRM-knapp**
+
