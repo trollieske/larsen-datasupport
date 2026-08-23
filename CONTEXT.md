@@ -102,7 +102,8 @@ hva gjelder enkelhet og brukervennlighet."
 - [x] Magisk-lenke (dev) → 302 → web_user opprettet → pris vises på /vare/:id.
 - [x] OCRimport-text, /epost + flush, alle admin-ruter 200.
 - [x] FIX (timer på mobil): htmx.js var lastet fra external CDN (unpkg) → ble blokkert på mobil → live timer frøs på 00:00:00. Nå self-hostet: `public/vendor/htmx.min.js` + begge layout-er når `/vendor/htmx.min.js`. (Timer-logikk server-side var korrekt — reprodusert 00:00:00→05→10.)
-- [x] Timer-merk: timer lagres i `data/larsen.db`/`time_entries` (`started_at` UTC). Nedtelling er server-side (now − started_at) opppolert via HTMX hx-trigger=`every 10s`; uten HTMX gikk den i frøs.
+- [x] Timer-merk: timer lagres i `data/larsen.db`/`time_entries` (`started_at` UTC). Nedtelling er server-side (now − started_at) oppdatert via HTMX.
+- [x] FIX 2 (timer tick): `_elapsed_span.erb` har nå LOKAL klient-nedtelling (data-start-epoch + setInterval 1s) + htmx-synk hver 5s. Timeren tikkker ALLTID uten refresh, uanset htmx/cache/CDN.
 
 ### MANGELR (neste steg — gjør nå):
 - [ ] `views/_cards.erb` — kortpartialet (HTMX-mål). Innhold per kort:
