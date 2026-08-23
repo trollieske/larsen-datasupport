@@ -1,54 +1,62 @@
-<%# Kortvegg. Selg åpner felles sheet (hardware.erb) via sell-btn data-attributter. %>
+<%# State-of-the-art lagerove: tett, drif-view, ikke webshop. Liten miniatyr, ingen store bilder. %>
 <% if @items.empty? %>
-  <div class="empty-state"><p>Ingen varer ennå — legg til din første vare.</p></div>
+  <div class="empty-state"><p><% if @q.to_s.strip.empty? && @status.to_s.strip.empty? %>Ingen varer ennå — legg til din første vare.<% else %>Ingen varer matcher filteret.<% end %></p></div>
 <% else %>
-  <div class="card-grid">
+  <div class="stock-head">
+    <span>Vare</span>
+    <span class="sh-price">Salg</span>
+    <span class="sh-profit">Fortjeneste</span>
+    <span class="sh-qty">På lager</span>
+    <span class="sh-actions">Handlinger</span>
+  </div>
+  <div class="stock-list">
     <% @items.each do |it| %>
       <% unit = it['sale_price'].to_i - it['cost_price'].to_i %>
-      <article class="item-card <%= it['quantity_in_stock'].to_i <= 0 ? 'sold-out' : '' %>">
-        <div class="item-photo">
-          <% if it['photo'] %>
-            <img src="/upload/<%= it['photo'] %>" alt="<%= h(it['name']) %>" loading="lazy">
-          <% else %>
-            <%= erb :_icon, locals: { name: "image", size: 40 } %>
-          <% end %>
-          <% if it['photo'] %><span class="img-count">1 bilde</span><% end %>
+      <% stock = it['quantity_in_stock'].to_i %>
+      <div class="stock-row <%= stock <= 0 ? 'sold-out' : '' %>">
+        <div class="stock-main">
+          <span class="stock-thumb">
+            <% if it['photo'] %>
+              <img src="/upload/<%= it['photo'] %>" alt="" loading="lazy">
+            <% else %>
+              <%= erb :_icon, locals: { name: "image", size: 26 } %>
+            <% end %>
+          </span>
+          <span class="stock-nametag">
+            <span class="stock-name"><%= h(it['name']) %></span>
+            <span class="stock-tag"><%= h(it['category']) %> · vare #<%= it['id'] %></span>
+          </span>
         </div>
-        <div class="item-body">
-          <div class="item-head">
-            <span class="tag"><%= h(it['category']) %></span>
-            <span class="stock-badge <%= it['quantity_in_stock'].to_i <= 0 ? 'zero' : '' %>"><%= it['quantity_in_stock'] %> på lager</span>
-          </div>
-          <h3 class="item-name"><%= h(it['name']) %></h3>
-          <p class="item-sale">Salgspris <strong class="num price"><%= format_kr(it['sale_price']) %></strong></p>
-          <% if it['sale_price'].to_i > 0 && it['cost_price'].to_i > 0 %>
-            <p class="item-margin muted"><%= unit >= 0 ? '+' : '−' %> margin <span class="num"><%= format_kr(unit) %></span> / stk</p>
-          <% end %>
-          <p class="item-id muted small">Vare #<%= it['id'] %></p>
-          <div class="item-actions">
-            <button type="button" class="btn small primary sell-btn"
-                    data-id="<%= it['id'] %>" data-name="<%= h(it['name']) %>"
-                    data-price="<%= kr_input(it['sale_price']) %>" data-stock="<%= it['quantity_in_stock'].to_i %>"
-                    <%= it['quantity_in_stock'].to_i <= 0 ? 'disabled' : '' %>>
-              <%= it['quantity_in_stock'].to_i <= 0 ? 'Utsolgt' : 'Selg' %>
-            </button>
-            <a class="btn small" href="/hardware?edit=<%= it['id'] %>"><%= erb :_icon, locals: { name: "pencil", size: 14 } %> Rediger</a>
-            <details class="more-menu">
-              <summary class="btn small ghost" aria-label="Flere valgene"><%= erb :_icon, locals: { name: "menu", size: 14 } %></summary>
-              <div class="more-menu-panel">
-                <button type="button" class="menu-item copy-btn" data-copy="<%= h(it['name']) %> · <%= h(it['category']) %> · <%= format_kr(it['sale_price']) %> · <%= @base_url %>/vare/<%= it['id'] %>">
-                  <%= erb :_icon, locals: { name: "copy", size: 14 } %> Kopier
-                </button>
-                <form method="post" action="/hardware/<%= it['id'] %>/delete"
-                      hx-post="/hardware/<%= it['id'] %>/delete" hx-target="#cards" hx-swap="innerHTML"
-                      onsubmit="return confirm('Slette <%= js(it['name']) %>?')">
-                  <button type="submit" class="menu-item danger"><%= erb :_icon, locals: { name: "trash", size: 14 } %> Slett</button>
-                </form>
-              </div>
-            </details>
-          </div>
+        <div class="stock-price">
+          <span class="stock-sale num"><%= format_kr(it['sale_price']) %></span>
+          <span class="stock-profit num muted"><%= unit >= 0 ? '+' : '−' %><%= format_kr(unit) %>/stk</span>
         </div>
-      </article>
+        <div class="stock-qty">
+          <span class="stock-badge <%= stock <= 0 ? 'zero' : '' %>"><%= stock %></span>
+        </div>
+        <div class="stock-actions">
+          <button type="button" class="btn small primary sell-btn"
+                  data-id="<%= it['id'] %>" data-name="<%= h(it['name']) %>"
+                  data-price="<%= kr_input(it['sale_price']) %>" data-stock="<%= stock %>"
+                  <%= stock <= 0 ? 'disabled' : '' %>>
+            <%= stock <= 0 ? 'Utsolgt' : 'Selg' %>
+          </button>
+          <a class="btn small" href="/hardware?edit=<%= it['id'] %>" aria-label="Rediger <%= h(it['name']) %>"><%= erb :_icon, locals: { name: "pencil", size: 14 } %></a>
+          <details class="more-menu">
+            <summary class="btn small ghost" aria-label="Flere valgene for <%= h(it['name']) %>"><%= erb :_icon, locals: { name: "menu", size: 14 } %></summary>
+            <div class="more-menu-panel">
+              <button type="button" class="menu-item copy-btn" data-copy="<%= h(it['name']) %> · <%= h(it['category']) %> · <%= format_kr(it['sale_price']) %> · <%= @base_url %>/vare/<%= it['id'] %>">
+                <%= erb :_icon, locals: { name: "copy", size: 14 } %> Kopier
+              </button>
+              <form method="post" action="/hardware/<%= it['id'] %>/delete"
+                    hx-post="/hardware/<%= it['id'] %>/delete" hx-target="#cards" hx-swap="innerHTML"
+                    onsubmit="return confirm('Slette <%= js(it['name']) %>?')">
+                <button type="submit" class="menu-item danger"><%= erb :_icon, locals: { name: "trash", size: 14 } %> Slett</button>
+              </form>
+            </div>
+          </details>
+        </div>
+      </div>
     <% end %>
   </div>
 <% end %>

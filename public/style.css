@@ -187,32 +187,37 @@ html[data-theme="light"] .theme-moon{display:inline-flex !important}
 .invoice-sum>div{display:flex;justify-content:space-between;gap:1rem;border-bottom:1px dashed var(--border);padding:.3rem 0}
 .invoice-sum .total{font-weight:700;border-bottom:none;font-size:1.05rem;border-top:2px solid var(--border-strong);padding-top:.6rem}
 
-/* ── Kortvegg (inventory) ── */
-.card-grid{display:grid;gap:1rem;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
-.item-card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;display:flex;flex-direction:column;transition:border-color .15s,transform .1s}
-.item-card:hover{border-color:var(--accent);transform:translateY(-2px)}
-.item-card.sold-out{opacity:.6}
-.item-photo{height:150px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;overflow:hidden}
-.item-photo img{width:100%;height:100%;object-fit:cover}
-.ph-emoji{font-size:3rem;line-height:1}
-.ph-emoji.big{font-size:4rem}
-.stats-strip{display:flex;flex-wrap:wrap;gap:.6rem 1.2rem;font-size:.875rem;color:var(--text-secondary);margin:.2rem 0 .9rem;padding:.7rem 1rem;background:var(--bg-subtle);border-radius:var(--radius-sm)}
-.stats-strip strong{color:var(--text-primary);font-weight:600}
-.stats-strip .good{color:var(--success)}
-.item-body{padding:.9rem;display:flex;flex-direction:column;gap:.45rem;flex:1}
-.item-head{display:flex;align-items:center;justify-content:space-between;gap:.4rem}
-.item-name{margin:0;font-size:1rem;font-weight:600;color:var(--text-primary)}
-.item-prices{display:flex;gap:.6rem;margin:0;font-size:.875rem}
-.item-prices .cost{color:var(--text-tertiary)}
-.item-prices .sale{font-weight:600;color:var(--success)}
-.item-margin{font-size:.8125rem;color:var(--text-tertiary);margin:0}
-.item-actions{display:flex;gap:.35rem;flex-wrap:wrap;margin-top:auto;padding-top:.3rem}
-.stock-badge{font-size:.75rem;color:var(--success);border:1px solid var(--success-soft);border-radius:var(--radius-pill);padding:.1rem .55rem;white-space:nowrap;background:var(--success-soft)}
+/* ── Lageroversikt (tett, operativ — ikke webshop) ── */
+.stock-head{display:flex;align-items:center;gap:.6rem;padding:.4rem .8rem;font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--text-tertiary);border-bottom:1px solid var(--border)}
+.stock-head .sh-price{width:84px;text-align:right}
+.stock-head .sh-profit{width:96px;text-align:right}
+.stock-head .sh-qty{width:64px;text-align:center}
+.stock-head .sh-actions{margin-left:auto}
+.stock-list{display:flex;flex-direction:column;gap:.35rem}
+.stock-row{display:flex;align-items:center;gap:.6rem;padding:.5rem .8rem;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);transition:border-color .12s}
+.stock-row:hover{border-color:var(--accent)}
+.stock-row.sold-out{opacity:.6}
+.stock-main{display:flex;align-items:center;gap:.6rem;flex:1;min-width:0}
+.stock-thumb{width:38px;height:38px;border-radius:8px;background:var(--bg-subtle);display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;color:var(--text-tertiary)}
+.stock-thumb img{width:100%;height:100%;object-fit:cover}
+.stock-nametag{display:flex;flex-direction:column;min-width:0}
+.stock-name{font-weight:600;font-size:.9375rem;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-tag{font-size:.75rem;color:var(--text-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stock-price{width:84px;display:flex;flex-direction:column;align-items:flex-end;flex:none}
+.stock-sale{font-weight:700;font-size:.9375rem;color:var(--text-primary);font-variant-numeric:tabular-nums}
+.stock-profit{font-size:.78rem;color:var(--text-tertiary);font-variant-numeric:tabular-nums}
+.stock-qty{width:64px;display:flex;justify-content:center;flex:none}
+.stock-badge{font-size:.75rem;font-weight:600;color:var(--success);border:1px solid var(--success-soft);border-radius:var(--radius-pill);padding:.1rem .55rem;white-space:nowrap;background:var(--success-soft);font-variant-numeric:tabular-nums}
 .stock-badge.zero{color:var(--danger);background:var(--danger-soft);border-color:var(--danger-soft)}
-.sell-details{position:relative;display:inline-block}
-.sell-details summary{cursor:pointer;list-style:none}
-.sell-details summary::-webkit-details-marker{display:none}
-.sell-form{position:absolute;right:0;top:calc(100% + .45rem);z-index:30;width:240px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);padding:.9rem;display:grid;gap:.5rem;box-shadow:var(--shadow-md)}
+.stock-actions{display:flex;gap:.3rem;align-items:center;flex:none;margin-left:auto}
+@media(max-width:760px){
+  .stock-head{display:none}
+  .stock-row{flex-wrap:wrap;padding:.6rem .7rem}
+  .stock-qty{order:3}
+  .stock-price{width:auto;flex-direction:row;align-items:baseline;gap:.5rem}
+  .stock-profit{font-size:.8125rem}
+  .stock-actions{width:100%;justify-content:flex-end;padding-top:.15rem;border-top:1px dashed var(--border)}
+}
 
 /* ── Offentlig ── */
 .public-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem}
@@ -314,12 +319,7 @@ html[data-theme="dark"] .google-btn{background:#fff;color:#222}
   .invoice-body{box-shadow:none;border-radius:0;padding:0}
 }
 
-/* ── Produktkort / frasalg ── */
-.item-photo{position:relative}
-.img-count{position:absolute;right:.35rem;bottom:.35rem;z-index:2;background:rgba(7,10,14,.72);color:#fff;font-size:.6875rem;padding:.15rem .45rem;border-radius:var(--radius-pill)}
-.item-sale{display:flex;align-items:baseline;gap:.4rem;margin:0;font-size:.875rem;color:var(--text-secondary)}
-.item-sale .price{font-size:1.125rem;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums}
-.item-id{margin:.15rem 0 0;font-size:.75rem}
+/* ── Frasalg / selg-sheet ── */
 .sell-btn{min-width:64px}
 .more-menu{position:relative;display:inline-block}
 .more-menu summary{cursor:pointer;list-style:none}
