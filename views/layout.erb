@@ -2,15 +2,17 @@
 <html lang="no">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><%= @title ? h(@title) + " · " : "" %>Larsen Datasupport</title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <script src="/vendor/htmx.min.js" defer></script>
 </head>
 <body>
+
+<!-- Topp-navigasjon (desktop) -->
 <header class="topbar">
-  <div class="brand"><span class="logo">🔧</span> Larsen Datasupport</div>
+  <a class="brand" href="/"><span class="logo">🔧</span> Larsen Datasupport</a>
   <nav>
     <a href="/" <%= nav_active("/") %>>Oversikt</a>
     <a href="/timer" <%= nav_active("/timer") %>>Timer</a>
@@ -35,5 +37,42 @@
 <footer class="footer">
   <p>Larsen Datasupport · Internt verktøy · Databasen er én fil: <code>data/larsen.db</code></p>
 </footer>
+
+<!-- Bun-navigasjonsbar (mobil, Apple-stil) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Hovedmeny">
+  <a href="/" class="bn-item <%= request.path_info == "/" ? "active" : "" %>" data-route="/"><span class="bn-icon">🏠</span><span class="bn-label">Oversikt</span></a>
+  <a href="/timer" class="bn-item <%= request.path_info.start_with?("/timer") ? "active" : "" %>" data-route="/timer"><span class="bn-icon">⏱</span><span class="bn-label">Timer</span></a>
+  <a href="/faktura" class="bn-item <%= request.path_info.start_with?("/faktura") ? "active" : "" %>" data-route="/faktura"><span class="bn-icon">🧾</span><span class="bn-label">Faktura</span></a>
+  <a href="/hardware" class="bn-item <%= request.path_info.start_with?("/hardware") ? "active" : "" %>" data-route="/hardware"><span class="bn-icon">📦</span><span class="bn-label">Lager</span></a>
+  <button type="button" class="bn-item bn-more" id="bnMore" aria-expanded="false"><span class="bn-icon">☰</span><span class="bn-label">Mer</span></button>
+</nav>
+
+<!-- «Mer»-ark (mobil) -->
+<div class="more-sheet" id="moreSheet" hidden>
+  <button type="button" class="more-backdrop" id="moreBackdrop" aria-label="Lukk"></button>
+  <div class="more-sheet-card">
+    <div class="sheet-title">Meny</div>
+    <a href="/kunder" class="sheet-item"><span class="sheet-ico">👥</span> Kunder</a>
+    <a href="/kontakter" class="sheet-item"><span class="sheet-ico">📇</span> Kontakter</a>
+    <a href="/epost" class="sheet-item"><span class="sheet-ico">📧</span> E-post</a>
+    <a href="/utsendelse" class="sheet-item"><span class="sheet-ico">📣</span> Utsendelse</a>
+    <a href="/innstillinger" class="sheet-item"><span class="sheet-ico">⚙️</span> Innstillinger</a>
+    <a href="/butikk" class="sheet-item" target="_blank" rel="noopener"><span class="sheet-ico">🛒</span> Butikk ↗</a>
+  </div>
+</div>
+
+<script>
+// «Mer»-arket: åpne/lukke + backdrop.
+(function(){
+  var more = document.getElementById('bnMore');
+  var sheet = document.getElementById('moreSheet');
+  var backdrop = document.getElementById('moreBackdrop');
+  function open(){ sheet.hidden = false; more.setAttribute('aria-expanded','true'); }
+  function close(){ sheet.hidden = true; more.setAttribute('aria-expanded','false'); }
+  more.addEventListener('click', function(){ sheet.hidden ? open() : close(); });
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', function(e){ if(e.key==='Escape') close(); });
+})();
+</script>
 </body>
 </html>

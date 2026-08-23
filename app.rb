@@ -173,6 +173,50 @@ class LarsenApp < Sinatra::Base
       end
     end
 
+    # Chart-data for dashbord — bar/line-diagram ved inline SVG, ingen CDN.
+    def minutes_last_days(n = 14)
+      out = []
+      today = Date.today
+      n.downto(1) do |k|
+        d = today - (k - 1)
+        s = Time.local(d.year, d.month, d.day).utc.iso8601
+        e = (Time.local(d.year, d.month, d.day) + 24 * 3600).utc.iso8601
+        mins = db.get_first_value(
+          "SELECT COALESCE(SUM(minutes),0) FROM time_entries WHERE started_at >= ? AND started_at < ? AND billable = 1",
+          [s, e]
+        ).to_i
+        out << { label: d.strftime("%d/%m"), short: d.strftime("%a").capitalize[0, 1], value: mins }
+      end
+      out
+    end
+
+    def revenue_last_months(n = 6)
+      out = []
+      this = Date.today
+      n.downto(1) do |k|
+        y0, m0 = this.year + ((this.month - k) / 12), ((this.month - k) % 12)
+        y0 -= 1 if m0 <= 0; m0 = 12 if m0 <= 0
+        y1, m1 = this.year + ((this.month - k + 1) / 12), ((this.month - k + 1) % 12)
+        y1 -= 1 if m1 <= 0; m1 = 12 if m1 <= 0
+        s = Time.local(y0, m0, 1).utc.iso8601
+        e = Time.local(y1, m1, 1).utc.iso8601
+        # Fakturert tid + salg pr måned
+        mins = db.get_first_value("SELECT COALESCE(SUM(minutes),0) FROM time_entries WHERE started_at >= ? AND started_at < ?", [s, e]).to_i
+        time_amt = db.execute(<<~SQL, [s, e]).sum { |r| amount_for_minutes(r["minutes"], rate_for(r)) }
+          SELECT te.*, c.hourly_rate_override
+          FROM time_entries te LEFT JOIN customers c ON c.id = te.customer_id
+          WHERE te.started_at >= ? AND te.started_at < ?
+        SQL
+        sale_amt = db.get_first_value(
+          "SELECT COALESCE(SUM(quantity * sale_price_each),0) FROM hardware_sales WHERE sold_at >= ? AND sold_at < ?",
+          [s, e]
+        ).to_i
+        label = Date.new(y0, m0, 1).strftime("%b")
+        out << { label: label, value: time_amt + sale_amt, mins: mins }
+      end
+      out
+    end
+
     def entries_with_filters(period: nil, customer_id: nil)
       period = "week" unless %w[today week month all].include?(period.to_s)
       where = []
@@ -576,6 +620,8 @@ class LarsenApp < Sinatra::Base
     end
     @activity = activity.sort_by { |a| a[:at].to_s }.reverse.first(8)
     @suggestions = dashboard_suggestions
+    @days = minutes_last_days(14)
+    @months = revenue_last_months(6)
     erb :dashboard
   end
 

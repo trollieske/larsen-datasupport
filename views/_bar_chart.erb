@@ -1,0 +1,22 @@
+<%# Inline SVG stolpediagram (ingen CDN, offline-first). data: [{label, value}] %>
+<% max = [data.map { |d| d[:value] }.max.to_f, 1].max %>
+<div class="chart" data-type="bar">
+  <svg viewBox="0 0 520 180" role="img" aria-label="Stolpodiagram">
+    <defs>
+      <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#5b97ff"/>
+        <stop offset="100%" stop-color="#3b78f0"/>
+      </linearGradient>
+    </defs>
+    <% data.each_with_index do |d, i| %>
+      <% h = (d[:value].to_f / max) * 130 %>
+      <% x = 30 + i * (500.0 / data.length) %>
+      <% w = (500.0 / data.length) * 0.62 %>
+      <rect x="<%= x %>" y="<%= 152 - h %>" width="<%= w %>" height="<%= [h, 0].max %>" rx="5" fill="url(#barGrad)"/>
+      <% if d[:value].to_i > 0 %>
+        <text x="<%= x + w / 2 %>" y="<%= 142 - h %>" text-anchor="middle" font-size="10" fill="#aeb9cc"><%= d[:value] %></text>
+      <% end %>
+      <text x="<%= x + w / 2 %>" y="170" text-anchor="middle" font-size="9" fill="#738096"><%= h(d[:label]) %></text>
+    <% end %>
+  </svg>
+</div>
