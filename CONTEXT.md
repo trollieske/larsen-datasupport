@@ -96,6 +96,12 @@ hva gjelder enkelhet og brukervennlighet."
 - [x] `app.rb`: helpers `save_photo/delete_photo/stock_value/potential_profit/realized_profit/hardware_stats/render_cards!/hx?/public_path?/queue_email`, ruter for kort (HTMX), foto-opplasting på ny/rediger, `/upload/:file`-rute, public_path utvidet, innstillinger-route for public_base_url.
 - [x] `views/settings.erb`: public_base_url felt.
 
+### VERIFISERT (test 2026-08-23 – inventory-geniet / mobil):
+- [x] FIX: `render_cards!` manglet `@customers`/`@base_url` → HTMX-kortvegg-fragment kraset NoMethodError. Nå satt opp – fragment returnerer kort med kundevalg + kopier-lenk.
+- [x] Legg-til-vare (HTMX), Selg-flyt (lager-trekk + realisert oppdatert), Slett-fly.
+- [x] Magisk-lenke (dev) → 302 → web_user opprettet → pris vises på /vare/:id.
+- [x] OCRimport-text, /epost + flush, alle admin-ruter 200.
+
 ### MANGELR (neste steg — gjør nå):
 - [ ] `views/_cards.erb` — kortpartialet (HTMX-mål). Innhold per kort:
       foto (ph-emoji fallback), navn, kategori-tag, kost→salg, på-lager badge ("2 på lager"),
