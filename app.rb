@@ -388,6 +388,9 @@ class LarsenApp < Sinatra::Base
     def render_cards!
       @items = db.execute("SELECT * FROM hardware_items ORDER BY (quantity_in_stock > 0) DESC, id DESC")
       @stats = hardware_stats(@items)
+      @customers = customers
+      @base_url = setting("public_base_url").to_s
+      @base_url = "#{request.scheme}://#{request.host_with_port}" if @base_url.empty?
       erb :_cards, layout: false
     end
 
