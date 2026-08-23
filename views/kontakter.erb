@@ -1,5 +1,166 @@
 <h1>Kontakter — enkelt CRM</h1>
 
+<section class="card import-card">
+  <h2>🖼️ Importér kontakter fra skjermbilde</h2>
+  <p class="muted small">Ta skjermbilde av en kontaktliste (telefon, e-post, kundeoppslag) og <strong>dra den hit</strong> eller <strong>lim inn med Ctrl+V</strong> — vi leser navn, e-post og telefon med OCR og legger de rett i CRM-en.</p>
+  <div id="dropzone" class="dropzone" tabindex="0">
+    <p>Dra og slipp bilde her …</p>
+    <p class="muted small">…eller lim inn (Ctrl+V) · last opp: <input type="file" id="dz-file" accept="image/*" hidden></p>
+  </div>
+  <details class="paste-details">
+    <summary class="btn small">Eller lim inn tekst (mail/broker-kopier)</summary>
+    <div class="paste-box">
+      <textarea id="dz-text" rows="5" placeholder="Kari Berg kari@berg.no 915 40 210&#10;Per Nilsen 99 88 77 66"></textarea>
+      <button type="button" class="btn" id="dz-text-btn">Analyser tekst</button>
+    </div>
+  </details>
+  <div id="dz-preview" hidden>
+    <h3>Forhåndsvisning — rediger før lagring</h3>
+    <div id="dz-rows"></div>
+    <div class="actions">
+      <button type="button" class="btn primary" id="dz-add">＋ Legg til valgte i CRM</button>
+      <label class="check"><input type="checkbox" id="dz-all" checked> Velg alle</label>
+    </div>
+  </div>
+</section>
+
+<script>
+(function () {
+  var state = [];
+  var dropzone = document.getElementById('dropzone');
+  var fileInput = document.getElementById('dz-file');
+  var preview = document.getElementById('dz-preview');
+  var rowsEl = document.getElementById('dz-rows');
+  var addBtn = document.getElementById('dz-add');
+  var allChk = document.getElementById('dz-all');
+  var textArea = document.getElementById('dz-text');
+  var textBtn = document.getElementById('dz-text-btn');
+
+  function setStatus(msg, isErr) {
+    var old = document.querySelector('.flash');
+    if (old) old.remove();
+    var p = document.createElement('div');
+    p.className = 'flash' + (isErr ? ' danger' : '');
+    p.textContent = msg;
+    dropzone.prepend(p);
+  }
+  var showStatus = setStatus;
+
+  // Minimal HTML-escape so OCR text isn't XSS
+  function esc(s) {
+    return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function renderRows() {
+    if (state.length === 0) { preview.hidden = true; return; }
+    preview.hidden = false;
+    rowsEl.innerHTML = state.map(function (c, i) {
+      return '<div class="dz-row">' +
+        '<label class="check"><input type="checkbox" id="rz-ck' + i + '" data-i="' + i + '" ' + (c.keep ? 'checked' : '') + '></label>' +
+        '<input class="dz-name" id="rz-n' + i + '" value="' + esc(c.name) + '" placeholder="Navn">' +
+        '<input class="dz-mail" id="rz-m' + i + '" value="' + esc(c.email) + '" placeholder="E-post">' +
+        '<input class="dz-phone" id="rz-p' + i + '" value="' + esc(c.phone) + '" placeholder="Telefon">' +
+        '<button type="button" class="btn small danger" data-del="' + i + '">✕</button>' +
+        '</div>';
+    }).join('');
+    allChk.checked = state.every(function (c) { return c.keep; });
+  }
+
+  function acceptContacts(contacts) {
+    (contacts || []).forEach(function (c) {
+      state.push({ name: c.name || '', email: c.email || '', phone: c.phone || '', keep: true });
+    });
+    renderRows();
+  }
+
+  function upload(file) {
+    var fd = new FormData();
+    fd.append('file', file);
+    var p = fetch('/kontakter/import', { method: 'POST', body: fd });
+    p.then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.error) { showStatus('❗ ' + j.error, true); return; }
+        if (!j.contacts || j.contacts.length === 0) { showStatus('Fant ingen kontakter i bildet.', true); return; }
+        acceptContacts(j.contacts);
+        showStatus('Fant ' + j.contacts.length + ' kontakt(er).');
+      })
+      .catch(function () { showStatus('OCR feilet.', true); });
+  }
+
+  function analyzeText() {
+    var text = textArea.value.trim();
+    if (!text) return;
+    var p = fetch('/kontakter/import/text', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ text: text })
+    });
+    p.then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (j.error) { showStatus('❗ ' + j.error, true); return; }
+        if (!j.contacts || j.contacts.length === 0) { showStatus('Fant ingen kontakter i teksten.', true); return; }
+        acceptContacts(j.contacts);
+        showStatus('Fant ' + j.contacts.length + ' kontakt(er).');
+      })
+      .catch(function () { showStatus('Analyser feil.', true); });
+  }
+
+  function commit() {
+    var rows = [];
+    state.forEach(function (c, i) {
+      if (!c.keep) return;
+      var piece = {
+        name: document.getElementById('rz-n' + i).value,
+        email: document.getElementById('rz-m' + i).value,
+        phone: document.getElementById('rz-p' + i).value,
+        tags: c.tags || 'importert'
+      };
+      if (piece.name.trim()) rows.push(piece);
+    });
+    if (rows.length === 0) { showStatus('Velg minimum én kontakt å legg til.', true); return; }
+    var p = fetch('/kontakter/commit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contacts: rows })
+    });
+    p.then(function (r) { return r.json(); })
+      .then(function (j) { showStatus(j.flash || 'OK'); if (j.added && j.added > 0) { state = []; preview.hidden = true; rowsEl.innerHTML = ''; setTimeout(() => location.reload(), 300); } })
+      .catch(function () { showStatus('Lagring feil.', true); });
+  }
+
+  dropzone.addEventListener('click', function () { fileInput.click(); });
+  dropzone.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+  });
+  dropzone.addEventListener('dragover', function (e) { e.preventDefault(); dropzone.classList.add('drag'); });
+  dropzone.addEventListener('dragleave', function (e) { dropzone.classList.remove('drag'); });
+  dropzone.addEventListener('drop', function (e) {
+    e.preventDefault(); dropzone.classList.remove('drag');
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) upload(e.dataTransfer.files[0]);
+  });
+  dropzone.addEventListener('paste', function (e) {
+    if (!e.clipboardData) return;
+    var items = e.clipboardData.items || [];
+    for (var i = 0; i < items.length; i++) {
+      var it = items[i];
+      if (it.type && it.type.indexOf('image') === 0 && it.getAsFile) { upload(it.getAsFile()); e.preventDefault(); return; }
+    }
+  });
+  fileInput.addEventListener('change', function () { if (fileInput.files[0]) { upload(fileInput.files[0]); fileInput.value = ''; } });
+  textBtn.addEventListener('click', analyzeText);
+  addBtn.addEventListener('click', commit);
+  allChk.addEventListener('change', function () { var v = allChk.checked; state.forEach(function (c) { c.keep = v; }); renderRows(); });
+  rowsEl.addEventListener('change', function (e) {
+    if (e.target.id && e.target.id.indexOf('rz-ck') === 0) {
+      var i = parseInt(e.target.dataset.i, 10); state[i].keep = e.target.checked; renderRows();
+    }
+  });
+  rowsEl.addEventListener('click', function (e) {
+    if (e.target.dataset && e.target.dataset.del !== undefined) {
+      var i = parseInt(e.target.dataset.del, 10); state.splice(i, 1); renderRows();
+    }
+  });
+})();
+</script>
+
 <% if @edit_contact %>
   <section class="card">
     <h2>Rediger kontakt: <%= h(@edit_contact["name"]) %></h2>

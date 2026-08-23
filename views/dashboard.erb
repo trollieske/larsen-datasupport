@@ -29,6 +29,17 @@
   </section>
 </div>
 
+<% if @suggestions && !@suggestions.empty? %>
+<section class="card suggestion-card">
+  <h2>🎯 Neste grep — la appen peke deg</h2>
+  <ul class="activity">
+    <% @suggestions.each do |s| %>
+      <li><span class="sugg-icon"><%= s[:icon] %></span> <a href="<%= h(s[:href]) %>"><%= h(s[:text]) %></a></li>
+    <% end %>
+  </ul>
+</section>
+<% end %>
+
 <section class="card">
   <h2>Siste aktivitet</h2>
   <% if @activity.empty? %>

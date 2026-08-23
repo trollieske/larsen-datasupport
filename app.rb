@@ -12,6 +12,7 @@ require "net/smtp"
 require "net/http"
 require "uri"
 require "json"
+require "shellwords"
 require "openssl"
 require_relative "db"
 
@@ -390,6 +391,64 @@ class LarsenApp < Sinatra::Base
       erb :_cards, layout: false
     end
 
+    def ocr_image(path)
+      return "" unless path.is_a?(String) && File.file?(path)
+      tessdata = File.join(__dir__, "data", "tessdata")
+      cmd = Shellwords.join(["tesseract", path, "stdout", "-l", "nor+eng", "--psm", "6"])
+      output = nil
+      begin
+        old = ENV["TESSDATA_PREFIX"]
+        ENV["TESSDATA_PREFIX"] = tessdata
+        output = `#{cmd}`.to_s
+        ENV["TESSDATA_PREFIX"] = old
+      rescue StandardError
+        return ""
+      end
+      output.to_s.strip
+    end
+
+    def extract_contacts(text)
+      return [] if text.to_s.empty?
+      email_re = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/i
+      phone_re = /(?:(?:47|0047)[\s-]?)?(?:\d{2}[\s-]?\d{2}[\s-]?\d{2}[\s-]?\d{2}|\d{3}[\s-]?\d{2}[\s-]?\d{3})/
+      lines = text.to_s.lines.map(&:strip).reject(&:empty?)
+      contacts = []
+      pending_name = nil
+      lines.each do |line_raw|
+        email = line_raw.scan(email_re).first&.to_s&.strip
+        phones = line_raw.scan(phone_re).map(&:strip).compact.uniq
+        body = line_raw.sub(email_re, "").sub(phone_re, "").gsub(/[•|·:;"]+/, " ").gsub(/\s+/, " ").strip
+        words = body.split(/\s+/).reject(&:empty?)
+        alldown = words.all? { |w| w =~ /\A[A-ZÆØÅÉÈØÆØÒ]./ }
+        name_good = !body.empty? && words.length.between?(1, 4) && alldown
+
+        if email && !name_good && pending_name
+          name = pending_name
+          body = body.empty? ? name : body
+        elsif email && name_good
+          name = body
+          pending_name = nil
+        elsif phones.empty? && !email && name_good && body.split(/[\s,;]+/).length >= 1
+          pending_name = body
+          next
+        elsif email || (!phones.empty? && name_good)
+          name = body.empty? ? (pending_name || "") : body
+          pending_name = nil
+        else
+          next
+        end
+        contacts << { name: name, email: email, phone: phones.first }
+      end
+      if pending_name && (n = contacts.find { |c| c[:email] && c[:name].to_s.strip.empty? })
+        n[:name] = pending_name
+      end
+      contacts
+    end
+
+    def ocr_import(file)
+      extract_contacts(ocr_image(file))
+    end
+
     # ── Webshop / innlogging (public) ────────────────────────────────────
     def base_url
       ub = setting("public_base_url").to_s
@@ -513,6 +572,7 @@ class LarsenApp < Sinatra::Base
       activity << { at: r["created_at"], text: "Salg · #{fmt_date(r['sold_at'])} · #{r['quantity']}× #{r['item_name']} (#{format_kr(r['quantity'].to_i * r['sale_price_each'].to_i)})" }
     end
     @activity = activity.sort_by { |a| a[:at].to_s }.reverse.first(8)
+    @suggestions = dashboard_suggestions
     erb :dashboard
   end
 
@@ -918,6 +978,8 @@ class LarsenApp < Sinatra::Base
       INSERT INTO customers (name, org_number, contact_person, email, phone, hourly_rate_override, notes, created_at)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     SQL
+    cid = db.last_insert_row_id
+    sync_contact_for_customer(cid)
     session[:flash] = "Kunden er lagt til."
     redirect "/kunder"
   end
@@ -927,6 +989,7 @@ class LarsenApp < Sinatra::Base
     db.execute(<<~SQL, [params[:name].to_s.strip, blank_nil(params[:org_number]), blank_nil(params[:contact_person]), blank_nil(params[:email]), blank_nil(params[:phone]), override.empty? ? nil : parse_kr(override), blank_nil(params[:notes]), params[:id]])
       UPDATE customers SET name = ?, org_number = ?, contact_person = ?, email = ?, phone = ?, hourly_rate_override = ?, notes = ? WHERE id = ?
     SQL
+    sync_contact_for_customer(params[:id])
     session[:flash] = "Kunden er oppdatert."
     redirect "/kunder"
   end
@@ -997,6 +1060,45 @@ class LarsenApp < Sinatra::Base
     redirect "/kontakter"
   end
 
+  post "/kontakter/import" do
+    content_type :json
+    f = params[:file]
+    halt 400, { error: "Ingen fil mottatt." }.to_json unless f && f[:tempfile]
+    contacts = ocr_import(f[:tempfile].path)
+    { contacts: contacts }.to_json
+  end
+
+  post "/kontakter/import/text" do
+    content_type :json
+    contacts = extract_contacts(params[:text].to_s)
+    { contacts: contacts }.to_json
+  end
+
+  post "/kontakter/commit" do
+    content_type :json
+    rows = (JSON.parse(request.body.read) rescue {})["contacts"] || []
+    added = 0
+    skipped = 0
+    rows.each do |r|
+      name = (r["name"] || "").to_s.strip
+      email = (r["email"] || "").to_s.strip.downcase
+      next if name.empty?
+      existing = email.empty? ? nil : db.get_first_value("SELECT id FROM contacts WHERE email = ?", [email])
+      if existing
+        skipped += 1
+      else
+        db.execute(
+          "INSERT INTO contacts (name, email, phone, tags, notes, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+          [name, email, (r["phone"] || "").to_s.strip, (r["tags"] || "importert").to_s.strip, (r["notes"] || "").to_s.strip, Time.now.utc.iso8601]
+        )
+        added += 1
+      end
+    end
+    flash = "#{added} lagt til i CRM, #{skipped} fantes allerede."
+    session[:flash] = flash
+    { added: added, skipped: skipped, flash: flash }.to_json
+  end
+
   post "/kontakter/:id" do
     cid = params[:customer_id].to_i
     db.execute(
@@ -1013,6 +1115,65 @@ class LarsenApp < Sinatra::Base
     redirect "/kontakter"
   end
 
+  # ── Auto-sync: opprett/lenk kontakt når kunde opprettes/oppdateres ──
+  def sync_contact_for_customer(cid)
+    c = db.get_first_row("SELECT * FROM customers WHERE id = ?", [cid])
+    return unless c
+    email = c["email"].to_s.strip.downcase
+    if email.empty?
+      return
+    end
+    contact = db.get_first_row("SELECT id FROM contacts WHERE email = ?", [email])
+    if contact
+      db.execute("UPDATE contacts SET customer_id = ? WHERE id = ?", [cid, contact["id"]])
+    else
+      db.execute(
+        "INSERT INTO contacts (name, email, phone, tags, notes, customer_id, created_at) VALUES (?, ?, ?, ?, 'Auto fra kunde', ?, ?)",
+        [c["name"], c["email"], c["phone"].to_s, "kunde", cid, Time.now.utc.iso8601]
+      )
+    end
+  end
+
+  # ── Dashboard-suggestions: «neste grep» som gjør appen uunnværlig ──
+  def dashboard_suggestions
+    out = []
+    # 1. Ufakturert som venter
+    groups = uninvoiced_groups
+    if (total = groups.values.sum { |g| g[:total] }) > 0
+      top = groups.values.sort_by { |g| g[:total] }.reverse.first(3)
+      text = top.map { |g| "#{g[:customer_name]} (#{format_kr(g[:total])})" }.join(", ")
+      out << { icon: "🧾", text: "Fakturerbart: #{format_kr(total)} — #{text}", href: "/faktura" }
+    end
+    # 2. Lavt lager
+    low = db.execute("SELECT name FROM hardware_items WHERE quantity_in_stock <= 1 ORDER BY quantity_in_stock LIMIT 3").map { |r| r["name"] }
+    unless low.empty?
+      out << { icon: "📦", text: "Kjøp inn mer: #{low.join(", ")}", href: "/hardware" }
+    end
+    # 3. Pågående timer veldig lang
+    if (a = active_timer)
+      mins = ((Time.now - Time.iso8601(a["started_at"])) / 60).round
+      if mins > 480
+        out << { icon: "⏱", text: "Timeren har gått i #{fmt_minutes(mins)} — stopp eller noter?", href: "/timer" }
+      end
+    end
+    # 4. Kontakter merket «interessert» til oppfølging (ingen e-post enda)
+    now_s = (Time.now - 7 * 24 * 3600).utc.iso8601
+    old = db.execute(<<~SQL, [now_s])
+      SELECT c.id, c.name FROM contacts c
+      LEFT JOIN emails e ON e.to_address = c.email
+      WHERE c.tags LIKE '%interessert%' AND c.created_at < ? AND e.id IS NULL
+      GROUP BY c.id ORDER BY c.created_at LIMIT 3
+    SQL
+    unless old.empty?
+      out << { icon: "💬", text: "Følg opp: #{old.map { |r| r['name'] }.join(', ')} (interessert, ingen e-post sendt)", href: "/utsendelse" }
+    end
+    # 5. Gamle varer uten salg → pris-sjekk
+    stale = db.execute("SELECT id, name FROM hardware_items WHERE sold_quantity = 0 AND created_at < ? LIMIT 2", [(Time.now - 30 * 24 * 3600).utc.iso8601]).map { |r| r["name"] }
+    unless stale.empty?
+      out << { icon: "🏷", text: "Har ligget 30+ dager uten salg: #{stale.join(', ')} — sett ned prisen?", href: "/hardware" }
+    end
+    out.first(5)
+  end
   # Tidslinje per kontakt: timer + salg + fakturaer + e-poster samlet.
   get "/kontakter/:id" do
     @title = "Kontakt"

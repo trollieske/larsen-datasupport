@@ -1,5 +1,5 @@
 # Larsen Datasupport — KOMPLETT KONTEXT / FREMDRIKT
-*Sist oppdatert: 2026-08-23 ~00:45 (etter Windows-test velykket)*
+*Sist oppdatert: 2026-08-23 ~09:50 (OCR-import kontakt fullført)*
 
 > Dette dokumentet er den evige "tråden". Hvis vi starter på nytt, les DETTE først —
 > alt av v1, videreutviklingsplanen og tekniske lærdommer står her.
@@ -25,7 +25,9 @@ superenkel, skalerbar, for nerds OG vanlige folk. Ekte produkt, ikke øvelse.
 | 🔄 Inventory-geniet (kortvegg + foto + HTMX) | 🔄 **PÅGÅR — HALVVEIS (se §5)** |
 | Webshop + prisinlogging (Google + magisk lenke) | ⏭ neste |
 | Auto-e-post fakturautsending (outbox-mønster) | ⏭ (emails-tabell allerede lagt til!) |
-| CRM-som-ikke-er-CRM (Kontakter + tidslinje) | ⏭ |
+| CRM-som-ikke-er-CRM (Kontakter + OCR-import fra skjermbilde) | ✅ FERDIG + VERIFISERT |
+| Dashboard «Neste grep»-suggestions | ✅ FERDIG + VERIFISERT |
+| Auto-sync kunde → kontakt | ✅ FERDIG + VERIFISERT |
 | Mailmerge/reklame (maler + tags) | ⏭ |
 
 **Meny-navigasjon / ruter:**
@@ -153,3 +155,10 @@ sleep 4; curl -s http://127.0.0.1:4567/health
 - **Windows-tilgang** fungerer via SSH-tunnel: `ssh -L 4567:localhost:4567 ck2k@192.168.0.152` → `http://localhost:4567` (passord `lol`).
 - **Deploy:** `cloudflared tunnel --url http://localhost:4567` (trycloudflare.com, ingen konto) — eller Fly.io med `fly launch` + `fly secrets set APP_PASSWORD ...` (krever brukerens login).
 - **Neste steg:** webshop med Google-innlogging + magisk lenke trenger SMTP satt opp; faktura-til-CRM-knapp.
+
+### ✦ Tillegg 2026-08-23 ~09:35 (OCR-import + dashboard)
+- **OCR-import fra skjermbilde (i Kontakter):** dra/slipp, Ctrl+V-lim, eller opplast → tesseract `nor+eng` → `extract_contacts` (epost/telefon/navn) → preview med redigering → commit. Rute-ordning viktig: `/kontakter/import` osv. MÅ stå FØR `/kontakter/:id` (ellers `:id` fanger dem).
+- **Tekn. lærd:** ikke bruk `Open3` (fantes ikke) — bruk `Shellwords.join([...])` + backticks. `TESSDATA_PREFIX` til `data/tessdata/`; la inn `eng.traineddata` (kopiert fra system) i tillegg til `nor`.
+- **Dashboard «Neste grep»:** 5 suggestion-ka.
+- **Auto-sync:** kunde opprettet/oppdatert → kontakt (match på e-post, unik-avderburg).
+- Verifisert: alle hoved-ruter 200; bilder-Niest + commit + text-OCR virker ende-til-ende; DB-rydset for testimport.
