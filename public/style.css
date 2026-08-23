@@ -310,6 +310,8 @@ html[data-theme="dark"] .google-btn{background:#fff;color:#222}
 
 /* ── Font-mindre skala ── */
 .empty-state{text-align:center;color:var(--text-tertiary);padding:2rem 0;font-size:.9375rem}
+.ok-icon{display:inline-flex;color:var(--success);vertical-align:text-bottom;margin-right:.3rem}
+.sugg-arrow{display:inline-flex;color:var(--text-tertiary)}
 .inline-form{display:inline}
 .float-none{float:none}
 @media(prefers-reduced-motion:reduce){
