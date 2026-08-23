@@ -97,6 +97,8 @@ hva gjelder enkelhet og brukervennlighet."
 - [x] `views/settings.erb`: public_base_url felt.
 
 ### VERIFISERT (test 2026-08-23 – inventory-geniet / mobil):
+- [x] **DESIGN-OVERHAUL (2026-08-23):** moderne tema inspirert av OpenRouter/Monday (glass-topbar, KPI-kort, farveakcenter, bedre skygger). **Grafik:** `views/_bar_chart.erb` + `views/_line_chart.erb` — inline SVG (ingen CDN), `minutes_last_days` (14 dager) + `revenue_last_months` (6 måneder) i app.rb. **Responsiv nav:** mobil (<760px) → bun-navigasjonsbar `bottom-nav` (Apple-stil, `env(safe-area-inset-bottom)`, blokkere topp-nav) med «Mer»-ark `more-sheet` (Kunder/Kontakter/E-post/Utsendelse/Innstillinger/Butikk); desktop (≥761px) → horisontal topp-nav. Public-layout (`public-topbar`) beholder links på mobil.
+- [x] Viktig CSS-lærdom: standalone `.bottom-nav{display:none}` MÅ stå FØR media-queries (~lik specificity → rei med source-order); public-topbar scoped med `:not(.public-topbar)`.
 - [x] FIX: `render_cards!` manglet `@customers`/`@base_url` → HTMX-kortvegg-fragment kraset NoMethodError. Nå satt opp – fragment returnerer kort med kundevalg + kopier-lenk.
 - [x] Legg-til-vare (HTMX), Selg-flyt (lager-trekk + realisert oppdatert), Slett-fly.
 - [x] Magisk-lenke (dev) → 302 → web_user opprettet → pris vises på /vare/:id.
