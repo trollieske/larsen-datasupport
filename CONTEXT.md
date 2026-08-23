@@ -101,6 +101,8 @@ hva gjelder enkelhet og brukervennlighet."
 - [x] Legg-til-vare (HTMX), Selg-flyt (lager-trekk + realisert oppdatert), Slett-fly.
 - [x] Magisk-lenke (dev) → 302 → web_user opprettet → pris vises på /vare/:id.
 - [x] OCRimport-text, /epost + flush, alle admin-ruter 200.
+- [x] FIX (timer på mobil): htmx.js var lastet fra external CDN (unpkg) → ble blokkert på mobil → live timer frøs på 00:00:00. Nå self-hostet: `public/vendor/htmx.min.js` + begge layout-er når `/vendor/htmx.min.js`. (Timer-logikk server-side var korrekt — reprodusert 00:00:00→05→10.)
+- [x] Timer-merk: timer lagres i `data/larsen.db`/`time_entries` (`started_at` UTC). Nedtelling er server-side (now − started_at) opppolert via HTMX hx-trigger=`every 10s`; uten HTMX gikk den i frøs.
 
 ### MANGELR (neste steg — gjør nå):
 - [ ] `views/_cards.erb` — kortpartialet (HTMX-mål). Innhold per kort:
