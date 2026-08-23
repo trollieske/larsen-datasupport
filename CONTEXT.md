@@ -23,6 +23,7 @@ superenkel, skalerbar, for nerds OG vanlige folk. Ekte produkt, ikke øvelse.
 | Deploy-klar: Dockerfile, fly.toml, .env.example, README | ✅ FERDIG |
 | Git-repo klar (commit "Første versjon...") | ✅ FERDIG (3 commits totalt) |
 | 🔄 Inventory-geniet (kortvegg + foto + HTMX) | 🔄 **PÅGÅR — HALVVEIS (se §5)** |
+| **v4-redesign** (profilsystem, SVG-ikoner, lys/mørk) | ✅ FERDIG + VERIFISERT — commits 46924e7/442186c |
 | Webshop + prisinlogging (Google + magisk lenke) | ⏭ neste |
 | Auto-e-post fakturautsending (outbox-mønster) | ⏭ (emails-tabell allerede lagt til!) |
 | CRM-som-ikke-er-CRM (Kontakter + OCR-import fra skjermbilde) | ✅ FERDIG + VERIFISERT |
@@ -98,6 +99,7 @@ hva gjelder enkelhet og brukervennlighet."
 
 ### VERIFISERT (test 2026-08-23 – inventory-geniet / mobil):
 - [x] **DESIGN-OVERHAUL (2026-08-23):** moderne tema inspirert av OpenRouter/Monday (glass-topbar, KPI-kort, farveakcenter, bedre skygger). **Grafik:** `views/_bar_chart.erb` + `views/_line_chart.erb` — inline SVG (ingen CDN), `minutes_last_days` (14 dager) + `revenue_last_months` (6 måneder) i app.rb. **Responsiv nav:** mobil (<760px) → bun-navigasjonsbar `bottom-nav` (Apple-stil, `env(safe-area-inset-bottom)`, blokkere topp-nav) med «Mer»-ark `more-sheet` (Kunder/Kontakter/E-post/Utsendelse/Innstillinger/Butikk); desktop (≥761px) → horisontal topp-nav. Public-layout (`public-topbar`) beholder links på mobil.
+- [x] **v4-redesign (2026-08-23, fra PROMPT_REDESIGN.md):** tokenbassert lys/mørk (`:root` + `html[data-theme=dark]`), ALLE emoji → SVG-ikoner (Lucide-style, `views/_icon.erb`), tema-toggle ikonknapp, `prefers-reduced-motion`, tabular-nums, WCAG AA. Commits 46924e7/442186c.
 - [x] Viktig CSS-lærdom: standalone `.bottom-nav{display:none}` MÅ stå FØR media-queries (~lik specificity → rei med source-order); public-topbar scoped med `:not(.public-topbar)`.
 - [x] BUGFIX (mobil-nav, senere i sesong): `more-sheet` lå OPP frankly `bottom-nav` (z-60 vs 50) → da `Mer` åpnet skullerte bunn-nav + sentrerte kart (max-width:480) så så „desktop-modus“. Fix: `.bottom-nav` z-index 90 (over sheet 80), `.more-sheet-card` `bottom:calc(74px+env(safe-area-inset-bottom))` fløter over nav, `sheet-grid` 2-col + `sheet-grip`, container-padding respondiv (`clamp(.6rem,2vw,1.5rem)`; var 4rem = kjempegig gurter).
 - [x] FIX: `render_cards!` manglet `@customers`/`@base_url` → HTMX-kortvegg-fragment kraset NoMethodError. Nå satt opp – fragment returnerer kort med kundevalg + kopier-lenk.
