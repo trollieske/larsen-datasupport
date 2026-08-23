@@ -1,88 +1,100 @@
-<h1>Klar for fakturering</h1>
+<h1>Faktura</h1>
 
-<% if @groups.empty? %>
-  <section class="card">
-    <p class="muted">Ingenting å fakturere akkurat nå</p>
-  </section>
-<% else %>
-  <% @groups.each do |_key, g| %>
-    <section class="card invoice-group">
-      <div class="card-head">
-        <h2><%= h(g[:customer_name]) %></h2>
-        <form method="post" action="/faktura/mark/<%= g[:key] %>" onsubmit="return confirm('Opprette faktura for <%= js(g[:customer_name]) %>?')">
-          <button type="submit" class="btn primary">Merk som fakturert</button>
-        </form>
-      </div>
-      <% unless g[:org_number].to_s.empty? %>
-        <p class="muted small">Org.nr: <%= h(g[:org_number]) %></p>
-      <% end %>
+<%# Filter: Klar nå (default) / Fakturert / Alle %>
+<div class="seg" role="group" aria-label="Faktura-filter">
+  <button type="button" class="seg-btn active" data-fv="klar">Klar nå</button>
+  <button type="button" class="seg-btn" data-fv="fakturert">Fakturert</button>
+  <button type="button" class="seg-btn" data-fv="alle">Alle</button>
+</div>
 
-      <% unless g[:entries].empty? %>
-        <h3>Timer</h3>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr><th>Dato</th><th>Beskrivelse</th><th class="num">Varighet</th><th class="num">Beløp</th></tr>
-            </thead>
-            <tbody>
-              <% g[:entries].each do |e| %>
-                <tr>
-                  <td><%= h(fmt_date(e["started_at"])) %></td>
-                  <td><%= h(e["description"]) %></td>
-                  <td class="num"><%= fmt_minutes(e["minutes"]) %></td>
-                  <td class="num"><%= format_kr(e["amount_ore"]) %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% end %>
-
-      <% unless g[:sales].empty? %>
-        <h3>Hardware-salg</h3>
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr><th>Dato</th><th>Vare</th><th class="num">Antall</th><th class="num">Pris/stk</th><th class="num">Beløp</th></tr>
-            </thead>
-            <tbody>
-              <% g[:sales].each do |s| %>
-                <tr>
-                  <td><%= h(fmt_date(s["sold_at"])) %></td>
-                  <td><%= h(s["item_name"]) %></td>
-                  <td class="num"><%= s["quantity"] %></td>
-                  <td class="num"><%= format_kr(s["sale_price_each"]) %></td>
-                  <td class="num"><%= format_kr(s["amount_ore"]) %></td>
-                </tr>
-              <% end %>
-            </tbody>
-          </table>
-        </div>
-      <% end %>
-
-      <div class="invoice-sum">
-        <div><span>Timer</span><span class="num"><%= format_kr(g[:time_amount]) %></span></div>
-        <div><span>Hardware</span><span class="num"><%= format_kr(g[:sale_amount]) %></span></div>
-        <div><span>Sum uten mva</span><span class="num"><%= format_kr(g[:subtotal]) %></span></div>
-        <div><span>Mva (<%= mva_percent %> %)</span><span class="num"><%= format_kr(g[:mva]) %></span></div>
-        <div class="total"><span>Totalt</span><span class="num"><%= format_kr(g[:total]) %></span></div>
-      </div>
-    </section>
-  <% end %>
-<% end %>
-
-<section class="card">
-  <h2>Siste fakturaer</h2>
-  <% if @recent.empty? %>
-    <p class="muted">Ingen fakturaer ennå — fakturer over, så dukker de opp her.</p>
+<section class="fact-block" data-fv="klar">
+  <% if @groups.empty? %>
+    <div class="empty-state"><p>Ingenting å fakturere akkurat nå.</p></div>
   <% else %>
-    <ul class="activity">
-      <% @recent.each do |ref, at| %>
-        <li>
-          <a href="/faktura/print?ref=<%= ref %>"><%= h(ref) %></a>
-          <span class="muted">· <%= h(fmt_date(at)) %></span>
-        </li>
-      <% end %>
-    </ul>
+    <% @groups.each do |_key, g| %>
+      <article class="invoice-group">
+        <div class="ig-head">
+          <div>
+            <h2><%= h(g[:customer_name]) %></h2>
+            <p class="muted small">
+              <%= g[:minutes] %> min · <%= g[:entries].size %> timer<%= g[:entries].size == 1 ? "" : "er" %><% unless g[:sales].empty? %> · <%= g[:sales].size %> vare<%= g[:sales].size == 1 ? "" : "r" %><% end %>
+              <% unless g[:org_number].to_s.empty? %> · Org.nr <%= h(g[:org_number]) %><% end %>
+            </p>
+          </div>
+        </div>
+        <div class="ig-total">
+          <span class="muted small">Ufakturert total</span>
+          <span class="num ig-amount"><%= format_kr(g[:total]) %></span>
+          <form method="post" action="/faktura/mark/<%= g[:key] %>" onsubmit="return confirm('Opprette faktura for <%= js(g[:customer_name]) %>?')">
+            <button type="submit" class="btn primary"><%= erb :_icon, locals: { name: "invoice", size: 15 } %> Klarfør faktura</button>
+          </form>
+        </div>
+        <details class="ig-basis">
+          <summary>Vis grunnlag</summary>
+          <% unless g[:entries].empty? %>
+            <div class="basis-rows">
+              <% g[:entries].each do |e| %>
+                <div class="basis-row">
+                  <span class="muted"><%= h(fmt_date(e["started_at"])) %></span>
+                  <span class="basis-main"><%= h(e["description"]) %></span>
+                  <span class="num muted"><%= fmt_minutes(e["minutes"]) %></span>
+                  <span class="num"><%= format_kr(e["amount_ore"]) %></span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+          <% unless g[:sales].empty? %>
+            <div class="basis-rows">
+              <% g[:sales].each do |s| %>
+                <div class="basis-row">
+                  <span class="muted"><%= h(fmt_date(s["sold_at"])) %></span>
+                  <span class="basis-main"><%= h(s["item_name"]) %> · <%= s['quantity'] %> stk</span>
+                  <span class="num muted"><%= format_kr(s["sale_price_each"]) %></span>
+                  <span class="num"><%= format_kr(s["amount_ore"]) %></span>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+          <div class="basis-sum">
+            <div><span>Sum uten mva</span><span class="num"><%= format_kr(g[:subtotal]) %></span></div>
+            <div><span>Mva (<%= mva_percent %> %)</span><span class="num"><%= format_kr(g[:mva]) %></span></div>
+            <div class="basis-total"><span>Totalt</span><span class="num"><%= format_kr(g[:total]) %></span></div>
+          </div>
+        </details>
+      </article>
+    <% end %>
   <% end %>
 </section>
+
+<section class="fact-block" data-fv="fakturert">
+  <% if @recent.empty? %>
+    <div class="empty-state"><p>Ingen fakturaer ennå.</p></div>
+  <% else %>
+    <div class="row-list">
+      <% @recent.each do |ref, at| %>
+        <div class="row-item">
+          <div class="row-main"><span class="row-customer"><%= h(ref) %></span><span class="row-meta muted"><%= h(fmt_date(at)) %></span></div>
+          <div class="row-actions">
+            <a class="btn small" href="/faktura/print?ref=<%= ref %>">Åpne</a>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+
+<script>
+(function () {
+  var segs = Array.prototype.slice.call(document.querySelectorAll('.seg-btn'));
+  var blocks = {};
+  Array.prototype.slice.call(document.querySelectorAll('.fact-block')).forEach(function (b) { blocks[b.dataset.fv || 'klar'] = b; });
+  function set(which) {
+    segs.forEach(function (s) { s.classList.toggle('active', s.dataset.fv === which); });
+    Array.prototype.slice.call(document.querySelectorAll('.fact-block')).forEach(function (b) {
+      b.style.display = (b.dataset.fv === which || which === 'alle') ? '' : 'none';
+    });
+  }
+  segs.forEach(function (s) { s.addEventListener('click', function () { set(s.dataset.fv); }); });
+  set('klar');
+})();
+</script>

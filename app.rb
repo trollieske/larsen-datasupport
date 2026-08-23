@@ -429,8 +429,26 @@ class LarsenApp < Sinatra::Base
       }
     end
 
-    def render_cards!
-      @items = db.execute("SELECT * FROM hardware_items ORDER BY (quantity_in_stock > 0) DESC, id DESC")
+    def filtered_items(q, status)
+      where = []
+      args = []
+      unless q.to_s.strip.empty?
+        where << "(name LIKE ? OR category LIKE ? OR notes LIKE ?)"
+        like = "%#{q.to_s.strip}%"
+        args.concat([like, like, like])
+      end
+      case status.to_s
+      when "in_stock" then where << "quantity_in_stock > 0"
+      when "sold_out" then where << "quantity_in_stock <= 0"
+      end
+      sql = "SELECT * FROM hardware_items"
+      sql += " WHERE " + where.join(" AND ") unless where.empty?
+      sql += " ORDER BY (quantity_in_stock > 0) DESC, id DESC"
+      args.empty? ? db.execute(sql) : db.execute(sql, args)
+    end
+
+    def render_cards!(q: nil, status: nil)
+      @items = filtered_items(q, status)
       @stats = hardware_stats(@items)
       @customers = customers
       @base_url = setting("public_base_url").to_s
@@ -590,6 +608,7 @@ class LarsenApp < Sinatra::Base
   # ── Dashboard ─────────────────────────────────────────────────────────
   get "/" do
     @title = "Oversikt"
+    @timer_bar = true
     s, e = period_bounds("month")
     month_rows = db.execute(<<~SQL, [s, e])
       SELECT te.*, c.hourly_rate_override
@@ -604,6 +623,7 @@ class LarsenApp < Sinatra::Base
     @uninvoiced_total = groups.values.sum { |g| g[:total] }
     @customer_count = db.get_first_value("SELECT COUNT(*) FROM customers").to_i
     @stock_count = db.get_first_value("SELECT COALESCE(SUM(quantity_in_stock), 0) FROM hardware_items").to_i
+    @stock_value = db.get_first_value("SELECT COALESCE(SUM(cost_price * quantity_in_stock), 0) FROM hardware_items").to_i
     @active = active_timer
 
     activity = []
@@ -618,7 +638,7 @@ class LarsenApp < Sinatra::Base
     SQL
       activity << { at: r["created_at"], text: "Salg · #{fmt_date(r['sold_at'])} · #{r['quantity']}× #{r['item_name']} (#{format_kr(r['quantity'].to_i * r['sale_price_each'].to_i)})" }
     end
-    @activity = activity.sort_by { |a| a[:at].to_s }.reverse.first(8)
+    @activity = activity.sort_by { |a| a[:at].to_s }.reverse.first(5)
     @suggestions = dashboard_suggestions
     @days = minutes_last_days(14)
     @months = revenue_last_months(6)
@@ -628,9 +648,11 @@ class LarsenApp < Sinatra::Base
   # ── Timeregistrering ───────────────────────────────────────────────────
   get "/timer" do
     @title = "Timer"
+    @timer_bar = true
     @active = active_timer
     @customers = customers
     @entries, @totals = entries_with_filters(period: params[:period], customer_id: params[:customer])
+    @today_entries, @today_totals = entries_with_filters(period: "today")
     erb :time_entries
   end
 
@@ -670,7 +692,8 @@ class LarsenApp < Sinatra::Base
       )
       session[:flash] = "Timeren stoppet: #{fmt_minutes(minutes)} registrert."
     end
-    redirect "/timer"
+    back = params[:back].to_s
+    redirect(back.start_with?("/") ? back : "/timer")
   end
 
   post "/timer/manual" do
@@ -732,6 +755,7 @@ class LarsenApp < Sinatra::Base
   # ── Faktura ────────────────────────────────────────────────────────────
   get "/faktura" do
     @title = "Faktura"
+    @timer_bar = true
     @groups = uninvoiced_groups
     @recent = recent_invoices
     erb :invoice_ready
@@ -782,17 +806,20 @@ class LarsenApp < Sinatra::Base
   # ── Hardware-lager (kortvegg) ────────────────────────────────────────
   get "/hardware" do
     @title = "Hardware"
+    @timer_bar = true
     @customers = customers
     @edit_item = params[:edit].to_i > 0 ? db.get_first_row("SELECT * FROM hardware_items WHERE id = ?", [params[:edit].to_i]) : nil
     @base_url = setting("public_base_url").to_s
     @base_url = "#{request.scheme}://#{request.host_with_port}" if @base_url.empty?
-    @items = db.execute("SELECT * FROM hardware_items ORDER BY (quantity_in_stock > 0) DESC, id DESC")
+    @q = params[:q].to_s
+    @status = params[:status].to_s
+    @items = filtered_items(@q, @status)
     @stats = hardware_stats(@items)
     erb :hardware
   end
 
   get "/hardware/cards" do
-    render_cards!
+    render_cards!(q: params[:q], status: params[:status])
   end
 
   # Ny vare. Foto er valgfritt. HTMX → oppdater kortveggen uten siderefresh.

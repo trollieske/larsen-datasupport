@@ -1,0 +1,20 @@
+<%# Slank, vedvarende aktiv-timer-bar (under header). Viser statusdot, kunde,
+    beskrivelse, tabulær tid og Stopp. Trykk åpner detaljer. Max to rader mobil. %>
+<aside class="timer-bar" aria-label="Aktiv timer">
+  <div class="tb-flex">
+    <span class="pulse" aria-hidden="true"></span>
+    <details class="tb-info">
+      <summary>
+        <span class="tb-cust"><%= h(active["customer_name"] || "Generisk / internt") %></span>
+        <% unless active["description"].to_s.empty? %><span class="tb-desc">— <%= h(active["description"]) %></span><% end %>
+        <span class="tb-start muted"> · startet <%= h(fmt_dt(active["started_at"])) %></span>
+      </summary>
+      <p class="tb-detail muted">Aktiv siden <%= h(fmt_dt(active["started_at"])) %>. Stopp timer når du er ferdig.</p>
+    </details>
+    <span class="tb-time"><%= erb :_elapsed_span, layout: false, locals: { active: active } %></span>
+    <form method="post" action="/timer/stop" class="tb-stop-form">
+      <input type="hidden" name="back" value="<%= h(back || request.path_info) %>">
+      <button type="submit" class="btn small danger"><%= erb :_icon, locals: { name: "stop", size: 14 } %> Stopp</button>
+    </form>
+  </div>
+</aside>

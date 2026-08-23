@@ -1,49 +1,32 @@
-<div class="table-wrap">
-  <table class="table">
-    <thead>
-      <tr>
-        <th>Start</th>
-        <th>Slutt</th>
-        <th class="num">Varighet</th>
-        <th>Kunde</th>
-        <th>Beskrivelse</th>
-        <th class="num">Beløp</th>
-        <th class="no-print"></th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @entries.each do |e| %>
-        <tr>
-          <td><%= h(fmt_dt(e["started_at"])) %></td>
-          <td class="muted"><%= e["ended_at"] ? h(fmt_dt(e["ended_at"])) : "pågår" %></td>
-          <td class="num"><%= fmt_minutes(e["minutes"]) %></td>
-          <td><%= h(e["customer_name"] || "Generisk / internt") %></td>
-          <td class="muted">
-            <%= h(e["description"]) %>
-            <% unless e["billable"].to_i == 1 %><span class="tag">ikke fakturerbar</span><% end %>
-          </td>
-          <td class="num"><%= format_kr(e["amount_ore"]) %></td>
-          <td class="no-print">
-            <form method="post" action="/timer/<%= e['id'] %>/delete" onsubmit="return confirm('Slette registreringen?')">
-              <button class="btn small danger" title="Slett"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
-            </form>
-          </td>
-        </tr>
-      <% end %>
-      <% if @entries.empty? %>
-        <tr><td colspan="7" class="muted">Ingen registreringer i dette utvalget.</td></tr>
-      <% end %>
-    </tbody>
-    <% unless @entries.empty? %>
-      <tfoot>
-        <tr>
-          <td colspan="2">Sum</td>
-          <td class="num"><strong><%= fmt_minutes(@totals[:minutes]) %></strong></td>
-          <td colspan="2"></td>
-          <td class="num"><strong><%= format_kr(@totals[:amount_ore]) %></strong></td>
-          <td class="no-print"></td>
-        </tr>
-      </tfoot>
+<%# Kompakte nylige rader: kunde, beskrivelse, varighet, beløp + Gjenta. %>
+<% if @entries.empty? %>
+  <div class="empty-state"><p>Ingen registreringer i dette utvalget.</p></div>
+<% else %>
+  <p class="list-sum muted small"><%= @entries.size %> registreringer · sum <%= fmt_minutes(@totals[:minutes]) %> · <%= format_kr(@totals[:amount_ore]) %></p>
+  <div class="row-list">
+    <% @entries.each do |e| %>
+      <div class="row-item">
+        <div class="row-main">
+          <span class="row-customer"><%= h(e["customer_name"] || "Generisk / internt") %></span>
+          <% unless e["description"].to_s.strip.empty? %>
+            <span class="row-desc"><%= h(e["description"]) %></span>
+          <% end %>
+          <% unless e["billable"].to_i == 1 %><span class="tag">ikke fakturerbar</span><% end %>
+        </div>
+        <div class="row-amt">
+          <span class="num"><%= fmt_minutes(e["minutes"]) %></span>
+          <span class="num price"><strong><%= format_kr(e["amount_ore"]) %></strong></span>
+        </div>
+        <div class="row-meta muted"><%= h(fmt_date(e["started_at"])) %></div>
+        <div class="row-actions">
+          <button type="button" class="btn small gjenta-btn"
+                  data-customer="<%= e['customer_id'] ? e['customer_id'] : '' %>"
+                  data-desc="<%= h(e['description']) %>"><%= erb :_icon, locals: { name: "refresh", size: 14 } %> Gjenta</button>
+          <form method="post" action="/timer/<%= e['id'] %>/delete" onsubmit="return confirm('Slette registreringen?')">
+            <button class="btn small danger" title="Slett" aria-label="Slett registrering"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
+          </form>
+        </div>
+      </div>
     <% end %>
-  </table>
-</div>
+  </div>
+<% end %>

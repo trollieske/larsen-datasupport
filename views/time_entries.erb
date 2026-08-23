@@ -1,85 +1,34 @@
-<h1>Timeregistrering</h1>
+<div class="timer-head">
+  <div>
+    <h1>Timer</h1>
+    <p class="muted small">En rask oversikt — ingen unødvendige skjema.</p>
+  </div>
+  <div class="timer-actions">
+    <% unless @active %>
+      <button type="button" class="btn primary big" id="startQuick"><%= erb :_icon, locals: { name: "play", size: 18 } %> Start timer</button>
+    <% end %>
+    <button type="button" class="btn" id="manualQuick"><%= erb :_icon, locals: { name: "plus", size: 16 } %> Manuelt</button>
+  </div>
+</div>
 
-<%= erb :timer_active, layout: false if @active %>
-
-<section class="card">
-  <h2>Start timer</h2>
-  <form method="post" action="/timer/start" class="form-row">
-    <div class="field">
-      <label for="cust">Kunde</label>
-      <select id="cust" name="customer_id">
-        <option value="">Generisk / internt</option>
-        <% @customers.each do |c| %>
-          <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
-        <% end %>
-      </select>
-    </div>
-    <div class="field grow">
-      <label for="desc">Beskrivelse</label>
-      <input id="desc" type="text" name="description" placeholder="F.eks. oppsett av ny PC" maxlength="200">
-    </div>
-    <div class="field align-end">
-      <button type="submit" class="btn primary big"><%= erb :_icon, locals: { name: "play", size: 18 } %> Start timer</button>
-    </div>
-  </form>
-</section>
-
-<section class="card">
-  <h2>Manuell registrering</h2>
-  <p class="muted small">For når du glemte å starte timeren: fyll inn varighet i minutter <em>eller</em> start- og sluttidspunkt.</p>
-  <form method="post" action="/timer/manual" class="grid-form">
-    <div class="field">
-      <label for="mcust">Kunde</label>
-      <select id="mcust" name="customer_id">
-        <option value="">Generisk / internt</option>
-        <% @customers.each do |c| %>
-          <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
-        <% end %>
-      </select>
-    </div>
-    <div class="field">
-      <label for="mdate">Dato</label>
-      <input id="mdate" type="date" name="date" value="<%= Date.today.iso8601 %>" required>
-    </div>
-    <div class="field">
-      <label for="mstart">Start (klokkeslett)</label>
-      <input id="mstart" type="time" name="start_time">
-    </div>
-    <div class="field">
-      <label for="mend">Slutt (klokkeslett)</label>
-      <input id="mend" type="time" name="end_time">
-    </div>
-    <div class="field">
-      <label for="mmin">…eller antall minutter</label>
-      <input id="mmin" type="number" name="minutes" min="1" placeholder="90">
-    </div>
-    <div class="field">
-      <label for="mdesc">Beskrivelse</label>
-      <input id="mdesc" type="text" name="description" maxlength="200">
-    </div>
-    <div class="field">
-      <label class="check">
-        <input type="hidden" name="billable" value="0">
-        <input type="checkbox" name="billable" value="1" checked> Fakturerbart
-      </label>
-    </div>
-    <div class="field align-end">
-      <button type="submit" class="btn">Legg til</button>
-    </div>
-  </form>
+<%# I dag — live oppsummering %>
+<section class="today-strip" aria-label="Oppsummering i dag">
+  <div class="ts-cell"><span class="muted">I dag</span><strong class="num"><%= fmt_minutes(@today_totals[:minutes]) %></strong></div>
+  <div class="ts-cell"><span class="muted">Verdi</span><strong class="num"><%= format_kr(@today_totals[:amount_ore]) %></strong></div>
+  <div class="ts-cell"><span class="muted">Registreringer</span><strong class="num"><%= @today_entries.size %></strong></div>
 </section>
 
 <section class="card">
   <div class="card-head">
     <h2>Registrerte timer</h2>
     <form id="filter" hx-get="/timer/entries" hx-target="#entries" hx-swap="innerHTML">
-      <select name="period" hx-trigger="change" hx-include="closest form">
+      <select name="period" hx-trigger="change" hx-include="closest form" aria-label="Periode">
         <option value="today" <%= "selected" if params[:period] == "today" %>>I dag</option>
         <option value="week" <%= "selected" if params[:period].to_s.empty? || params[:period] == "week" %>>Denne uken</option>
         <option value="month" <%= "selected" if params[:period] == "month" %>>Denne måneden</option>
         <option value="all" <%= "selected" if params[:period] == "all" %>>Alt</option>
       </select>
-      <select name="customer" hx-trigger="change" hx-include="closest form">
+      <select name="customer" hx-trigger="change" hx-include="closest form" aria-label="Kunde">
         <option value="">Alle kunder</option>
         <option value="none" <%= "selected" if params[:customer] == "none" %>>Generisk / internt</option>
         <% @customers.each do |c| %>
@@ -92,3 +41,113 @@
     <%= erb :_entries_table, layout: false %>
   </div>
 </section>
+
+<%# Bottom sheet: Start timer (Kunde/Beskrivelse) + «Flere valgene» ned på manuell. %>
+<div class="sheet" id="timerSheet" hidden>
+  <button type="button" class="sheet-scrim" id="tsScrim"></button>
+  <div class="sheet-card">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="sheet-title">Start timer</div>
+    <form method="post" action="/timer/start" class="grid-form">
+      <div class="field">
+        <label for="tsCust">Kunde</label>
+        <select id="tsCust" name="customer_id">
+          <option value="">Generisk / internt</option>
+          <% @customers.each do |c| %>
+            <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="field full">
+        <label for="tsDesc">Beskrivelse</label>
+        <input id="tsDesc" type="text" name="description" placeholder="F.eks. oppsett av ny PC" maxlength="200">
+      </div>
+      <div class="field full">
+        <button type="submit" class="btn primary big block"><%= erb :_icon, locals: { name: "play", size: 18 } %> Start timer</button>
+      </div>
+    </form>
+
+    <details id="tsMore" class="ts-more">
+      <summary>Flere valgene <span class="muted small">— manuell registrering</span></summary>
+      <form method="post" action="/timer/manual" class="grid-form">
+        <div class="field">
+          <label for="msCust">Kunde</label>
+          <select id="msCust" name="customer_id">
+            <option value="">Generisk / internt</option>
+            <% @customers.each do |c| %>
+              <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+            <% end %>
+          </select>
+        </div>
+        <div class="field">
+          <label for="msDate">Dato</label>
+          <input id="msDate" type="date" name="date" value="<%= Date.today.iso8601 %>" required>
+        </div>
+        <div class="field">
+          <label for="msMin">…eller antall minutter</label>
+          <input id="msMin" type="number" name="minutes" min="1" placeholder="90">
+        </div>
+        <div class="field">
+          <label for="msStart">Start</label>
+          <input id="msStart" type="time" name="start_time">
+        </div>
+        <div class="field">
+          <label for="msEnd">Slutt</label>
+          <input id="msEnd" type="time" name="end_time">
+        </div>
+        <div class="field full">
+          <label for="msDesc">Beskrivelse</label>
+          <input id="msDesc" type="text" name="description" maxlength="200">
+        </div>
+        <div class="field">
+          <label class="check">
+            <input type="hidden" name="billable" value="0">
+            <input type="checkbox" name="billable" value="1" checked> Fakturerbart
+          </label>
+        </div>
+        <div class="field align-end">
+          <button type="submit" class="btn">Lagre manuelt</button>
+        </div>
+      </form>
+    </details>
+  </div>
+</div>
+
+<script>
+(function () {
+  var sheet = document.getElementById('timerSheet');
+  var scrim = document.getElementById('tsScrim');
+  var more = document.getElementById('tsMore');
+  var startB = document.getElementById('startQuick');
+  var manualB = document.getElementById('manualQuick');
+
+  function openTimer(showMore, custId, desc) {
+    if (custId) {
+      var sel = document.getElementById('tsCust');
+      Array.prototype.slice.call(sel.options).some(function (o) {
+        if (o.value === String(custId)) { sel.value = custId; return true; }
+        return false;
+      });
+    }
+    if (typeof desc !== 'undefined') {
+      document.getElementById('tsDesc').value = desc || '';
+    }
+    if (showMore) more.setAttribute('open', ''); else more.removeAttribute('open');
+    sheet.hidden = false;
+    if (showMore && document.getElementById('msDesc')) document.getElementById('msDesc').focus();
+  }
+  function closeSheet() { sheet.hidden = true; }
+  if (scrim) scrim.addEventListener('click', closeSheet);
+  if (startB) startB.addEventListener('click', function () { openTimer(false); });
+  if (manualB) manualB.addEventListener('click', function () { openTimer(true); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+
+  // «Gjenta» — re-åpner sheet forhåndsvalgt kunde/beskrivelse.
+  // Bruker global click-handler så nye rader (HTMX) også virker.
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.gjenta-btn') : null;
+    if (!b) return;
+    openTimer(false, b.dataset.customer || '', b.dataset.desc || '');
+  });
+})();
+</script>

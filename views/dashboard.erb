@@ -5,7 +5,7 @@
   </div>
   <div class="dash-actions">
     <a class="btn primary" href="/timer"><%= erb :_icon, locals: { name: "play", size: 16 } %> Start timer</a>
-    <a class="btn ghost" href="/hardware"><%= erb :_icon, locals: { name: "plus", size: 16 } %> Legg til vare</a>
+    <a class="btn ghost" href="/hardware"><%= erb :_icon, locals: { name: "box", size: 16 } %> Registr salg</a>
   </div>
 </div>
 
@@ -17,12 +17,11 @@
       <p class="kpi-value"><%= format_kr(@month_amount) %></p>
       <p class="kpi-sub"><%= fmt_minutes(@month_minutes) %> fakturerbare timer</p>
     </div>
-    <span class="kpi-chip good">+</span>
   </article>
   <article class="kpi">
     <div class="kpi-icon"><%= erb :_icon, locals: { name: "wallet", size: 20 } %></div>
     <div class="kpi-body">
-      <p class="kpi-label">Ufakturert — venter på deg</p>
+      <p class="kpi-label">Ufakturert</p>
       <p class="kpi-value"><%= format_kr(@uninvoiced_total) %></p>
       <p class="kpi-sub"><%= format_kr(@uninvoiced_subtotal) %> uten mva</p>
     </div>
@@ -30,9 +29,9 @@
   <article class="kpi">
     <div class="kpi-icon"><%= erb :_icon, locals: { name: "box", size: 20 } %></div>
     <div class="kpi-body">
-      <p class="kpi-label">Lager</p>
-      <p class="kpi-value"><%= @stock_count %></p>
-      <p class="kpi-sub"><%= @customer_count %> kunder</p>
+      <p class="kpi-label">Lagerverdi</p>
+      <p class="kpi-value"><%= format_kr(@stock_value) %></p>
+      <p class="kpi-sub"><%= @stock_count %> stk på lager</p>
     </div>
   </article>
 </div>
@@ -54,23 +53,9 @@
   </section>
 </div>
 
-<% if @active %>
-<section class="card live-timer">
-  <div class="live-info">
-    <span class="pulse" aria-hidden="true"></span>
-    <div>
-      <p class="muted">Aktiv timer</p>
-      <p class="live-name"><%= h(@active["customer_name"] || "Generisk / internt") %><% unless @active["description"].to_s.empty? %> — <%= h(@active["description"]) %><% end %></p>
-      <p class="elapsed"><%= erb :_elapsed_span, layout: false, locals: { active: @active } %></p>
-    </div>
-  </div>
-  <form method="post" action="/timer/stop"><button class="btn danger big"><%= erb :_icon, locals: { name: "stop", size: 16 } %> Stopp timer</button></form>
-</section>
-<% end %>
-
 <% if @suggestions && !@suggestions.empty? %>
 <section class="card sugg-card">
-  <div class="card-head"><h2>Neste grep — la appen peke deg</h2></div>
+  <div class="card-head"><h2>Trenger oppfølging — la appen peke deg</h2></div>
   <div class="sugg-list">
     <% @suggestions.each do |s| %>
       <a class="sugg-item" href="<%= h(s[:href]) %>">
@@ -85,13 +70,16 @@
 
 <section class="card">
   <div class="card-head"><h2>Siste aktivitet</h2></div>
-  <div class="activity">
-    <% @activity.each do |a| %>
-      <div class="activity-item">
-        <span class="act-time muted"><%= h(fmt_date(a[:at])) %></span>
-        <span class="act-text"><%= h(a[:text]) %></span>
-      </div>
-    <% end %>
-    <% if @activity.empty? %><p class="muted">Ingenting ennå — start en timer eller registrer et salg.</p><% end %>
-  </div>
+  <% if @activity.empty? %>
+    <p class="muted">Ingenting ennå — start en timer eller registrer et salg.</p>
+  <% else %>
+    <div class="activity">
+      <% @activity.each do |a| %>
+        <div class="activity-item">
+          <span class="act-time muted"><%= h(fmt_date(a[:at])) %></span>
+          <span class="act-text"><%= h(a[:text]) %></span>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </section>

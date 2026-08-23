@@ -1,0 +1,72 @@
+<%# Vare-skjema (ny/redigér), delt i Produkt / Pris / Lager.
+    Locals: action:, fid:, submit:, hx: (valgfri string for hx-post-rute). %>
+<%
+  item = defined?(item) && item ? item : {}
+  attrs = ""
+  if defined?(hx) && hx
+    attrs = "hx-post=\"" + hx + "\" hx-target=\"#cards\" hx-swap=\"innerHTML\" hx-encoding=\"multipart/form-data\""
+  end
+%>
+<form method="post" action="<%= action %>" enctype="multipart/form-data" <%= attrs %>>
+  <fieldset class="form-sect">
+    <legend>Produkt</legend>
+    <div class="field">
+      <label for="f_name_<%= fid %>">Navn</label>
+      <input id="f_name_<%= fid %>" type="text" name="name" value="<%= h(item['name']) %>" required maxlength="200" placeholder="Dell P2422H 24&quot;">
+    </div>
+    <div class="field">
+      <label for="f_cat_<%= fid %>">Kategori</label>
+      <select id="f_cat_<%= fid %>" name="category">
+        <% CATEGORIES.each do |c| %><option <%= "selected" if item["category"] == c %>><%= c %></option><% end %>
+      </select>
+    </div>
+    <div class="field">
+      <label for="f_photo_<%= fid %>">Foto (valgfritt)</label>
+      <input id="f_photo_<%= fid %>" type="file" name="photo" accept="image/*">
+    </div>
+  </fieldset>
+
+  <fieldset class="form-sect">
+    <legend>Pris</legend>
+    <div class="field">
+      <label for="f_cost_<%= fid %>">Kostpris (kr)</label>
+      <input id="f_cost_<%= fid %>" type="text" name="cost_price" inputmode="decimal" value="<%= kr_input(item['cost_price']) %>">
+    </div>
+    <div class="field">
+      <label for="f_sale_<%= fid %>">Salgspris (kr)</label>
+      <input id="f_sale_<%= fid %>" type="text" name="sale_price" inputmode="decimal" value="<%= kr_input(item['sale_price']) %>">
+    </div>
+    <p class="field-hint muted">Fortjeneste per stk: <strong id="profit_<%= fid %>" class="num">—</strong></p>
+  </fieldset>
+
+  <fieldset class="form-sect">
+    <legend>Lager</legend>
+    <div class="field">
+      <label for="f_qty_<%= fid %>">Antall på lager</label>
+      <input id="f_qty_<%= fid %>" type="number" name="quantity_in_stock" min="0" value="<%= item['quantity_in_stock'].to_i %>">
+    </div>
+    <div class="field">
+      <label for="f_notes_<%= fid %>">Notater</label>
+      <input id="f_notes_<%= fid %>" type="text" name="notes" value="<%= h(item['notes']) %>" maxlength="300">
+    </div>
+    <div class="field align-end">
+      <button type="submit" class="btn primary big block"><%= submit %></button>
+    </div>
+  </fieldset>
+</form>
+<script>
+(function () {
+  var cost = document.getElementById('f_cost_<%= fid %>');
+  var sale = document.getElementById('f_sale_<%= fid %>');
+  var out = document.getElementById('profit_<%= fid %>');
+  function krNum(v) { var n = parseFloat(String(v).replace(/[\s,]/g, '.')) || 0; return Math.round(n * 100); }
+  function fmt(a) {
+    if (!a || Math.abs(a) <= 0) return '—';
+    var neg = a < 0; a = Math.abs(a);
+    var k = Math.floor(a / 100), r = a % 100, t = String(k).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+    return (neg ? '−' : '') + t + (r ? ',' + String(r).padStart(2, '0') : '') + ' kr';
+  }
+  function upd() { out.textContent = fmt(krNum(sale.value) - krNum(cost.value)); }
+  if (cost && sale) { cost.addEventListener('input', upd); sale.addEventListener('input', upd); upd(); }
+})();
+</script>

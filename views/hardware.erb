@@ -1,116 +1,146 @@
-<h1>Hardware — kortvegg</h1>
+<div class="hw-head">
+  <div>
+    <h1>Lager</h1>
+    <p class="muted small">Hardware med fortjeneste og lagerstatus.</p>
+  </div>
+  <div class="timer-actions">
+    <a class="btn primary big" href="#addForm"><%= erb :_icon, locals: { name: "plus", size: 16 } %> Legg til vare</a>
+  </div>
+</div>
+
+<%# KPI-er: mobil viser maks to direkte. %>
+<div class="hw-kpis">
+  <article class="hw-kpi">
+    <div class="kpi-icon"><%= erb :_icon, locals: { name: "box", size: 18 } %></div>
+    <div class="kpi-body">
+      <p class="kpi-label">Lagerverdi</p>
+      <p class="kpi-value"><%= format_kr(@stats[:stock_value]) %></p>
+    </div>
+  </article>
+  <article class="hw-kpi">
+    <div class="kpi-icon"><%= erb :_icon, locals: { name: "wallet", size: 18 } %></div>
+    <div class="kpi-body">
+      <p class="kpi-label">Potensiell fortjeneste</p>
+      <p class="kpi-value"><%= format_kr(@stats[:potential]) %></p>
+    </div>
+  </article>
+</div>
+<p class="muted small hw-sub">Realisert fortjeneste <%= format_kr(@stats[:realized]) %> · <%= @stats[:units] %> stk på lager.</p>
+
+<%# Søk + på-lager-filter (live via HTMX) %>
+<div class="hw-filter">
+  <div class="field search-flex">
+    <input type="search" name="q" value="<%= h(@q) %>" placeholder="Søk vare…" aria-label="Søk vare"
+           hx-get="/hardware/cards" hx-target="#cards" hx-swap="innerHTML"
+           hx-trigger="keyup delay:300ms" hx-include="closest form">
+  </div>
+  <div class="field">
+    <select name="status" aria-label="Lagerstatus" hx-get="/hardware/cards" hx-target="#cards" hx-swap="innerHTML"
+            hx-trigger="change" hx-include="closest form">
+      <option value="">Alle</option>
+      <option value="in_stock" <%= "selected" if @status == "in_stock" %>>På lager</option>
+      <option value="sold_out" <%= "selected" if @status == "sold_out" %>>Utsolgt</option>
+    </select>
+  </div>
+</div>
+
+<div id="cards">
+  <%= erb :_cards, layout: false %>
+</div>
 
 <% if @edit_item %>
-  <section class="card">
-    <h2>Rediger vare: <%= h(@edit_item["name"]) %></h2>
-    <form method="post" action="/hardware/<%= @edit_item['id'] %>" class="grid-form" enctype="multipart/form-data">
-      <div class="field">
-        <label>Navn</label>
-        <input type="text" name="name" value="<%= h(@edit_item['name']) %>" required maxlength="200">
-      </div>
-      <div class="field">
-        <label>Kategori</label>
-        <select name="category">
-          <% CATEGORIES.each do |c| %><option <%= "selected" if @edit_item['category'] == c %>><%= c %></option><% end %>
-        </select>
-      </div>
-      <div class="field">
-        <label>Kostpris (kr)</label>
-        <input type="text" name="cost_price" inputmode="decimal" value="<%= kr_input(@edit_item['cost_price']) %>">
-      </div>
-      <div class="field">
-        <label>Salgspris (kr)</label>
-        <input type="text" name="sale_price" inputmode="decimal" value="<%= kr_input(@edit_item['sale_price']) %>">
-      </div>
-      <div class="field">
-        <label>Antall på lager</label>
-        <input type="number" name="quantity_in_stock" min="0" value="<%= @edit_item['quantity_in_stock'] %>">
-      </div>
-      <div class="field">
-        <label>Foto (valgfritt — nytt bilde erstatter)</label>
-        <input type="file" name="photo" accept="image/*">
-      </div>
-      <div class="field">
-        <label>Notater</label>
-        <input type="text" name="notes" value="<%= h(@edit_item['notes']) %>" maxlength="300">
-      </div>
-      <div class="field align-end">
-        <div class="actions">
-          <button type="submit" class="btn primary">Lagre endringer</button>
-          <a class="btn" href="/hardware">Avbryt</a>
-        </div>
-      </div>
-    </form>
+  <section class="card" id="editForm">
+    <div class="card-head">
+      <h2>Rediger vare</h2>
+      <a class="btn" href="/hardware">Avbryt</a>
+    </div>
+    <%= erb :_item_form, layout: false, locals: { action: "/hardware/#{@edit_item['id']}", fid: "edit_#{@edit_item['id']}", submit: "Lagre endringer", item: @edit_item } %>
   </section>
 <% end %>
 
-<section class="card add-card">
-  <h2>Legg til vare</h2>
-  <form method="post" action="/hardware" class="grid-form" enctype="multipart/form-data"
-        hx-post="/hardware" hx-target="#cards" hx-swap="innerHTML" hx-encoding="multipart/form-data">
-    <div class="field">
-      <label>Navn</label>
-      <input type="text" name="name" required maxlength="200" placeholder="Dell P2422H 24&quot;">
-    </div>
-    <div class="field">
-      <label>Kategori</label>
-      <select name="category">
-        <% CATEGORIES.each do |c| %><option><%= c %></option><% end %>
-      </select>
-    </div>
-    <div class="field">
-      <label>Kostpris (kr)</label>
-      <input type="text" name="cost_price" inputmode="decimal" placeholder="1100">
-    </div>
-    <div class="field">
-      <label>Salgspris (kr)</label>
-      <input type="text" name="sale_price" inputmode="decimal" placeholder="1650">
-    </div>
-    <div class="field">
-      <label>Antall på lager</label>
-      <input type="number" name="quantity_in_stock" min="0" value="1">
-    </div>
-    <div class="field">
-      <label>Foto (valgfritt)</label>
-      <input type="file" name="photo" accept="image/*">
-    </div>
-    <div class="field">
-      <label>Notater</label>
-      <input type="text" name="notes" maxlength="300">
-    </div>
-    <div class="field align-end">
-      <button type="submit" class="btn primary big">＋ Legg til vare</button>
-    </div>
-  </form>
+<section class="card" id="addForm">
+  <div class="card-head">
+    <h2>Legg til vare</h2>
+  </div>
+  <%= erb :_item_form, layout: false, locals: { action: "/hardware", fid: "add", submit: "Legg til vare", hx: "/hardware" } %>
 </section>
 
-<section class="card">
-  <div class="card-head">
-    <h2>Lageret</h2>
-    <div class="search-wrap">
-      <%= @customers.count %> kunder-referanser
-    </div>
+<%# Fellesskap «Selg»-sheet: åpnes fra sell-btn (data-attributter). %>
+<div class="sheet" id="sellSheet" hidden>
+  <button type="button" class="sheet-scrim" id="sellScrim"></button>
+  <div class="sheet-card">
+    <div class="sheet-grip" aria-hidden="true"></div>
+    <div class="sheet-title">Selg: <span id="sellName"></span></div>
+    <form id="sellForm" method="post" action="" hx-target="#cards" hx-swap="innerHTML">
+      <div class="field">
+        <label for="sellQty">Antall</label>
+        <input id="sellQty" type="number" name="quantity" min="1" value="1">
+      </div>
+      <div class="field">
+        <label for="sellPrice">Salgspris (kr)</label>
+        <input id="sellPrice" type="text" name="sale_price_each" inputmode="decimal">
+      </div>
+      <div class="field">
+        <label for="sellCust">Kunde (valgfri)</label>
+        <select id="sellCust" name="customer_id">
+          <option value="">Anonym / Finn.no</option>
+          <% @customers.each do |c| %>
+            <option value="<%= c['id'] %>"><%= h(c['name']) %></option>
+          <% end %>
+        </select>
+      </div>
+      <div class="field align-end">
+        <button type="submit" class="btn primary big block"><%= erb :_icon, locals: { name: "check", size: 16 } %> Bekreft salg</button>
+      </div>
+    </form>
   </div>
-  <%= erb :_cards, layout: false %>
-</section>
+</div>
 
 <script>
-// Kopier ferdigformatert salgstekst ett trykk.
-document.addEventListener("click", function (e) {
-  var b = e.target.closest(".copy-btn");
-  if (!b) return;
-  var text = b.getAttribute("data-copy");
-  navigator.clipboard.writeText(text).then(function () {
-    var s = b.querySelector("span");
-    var old = s.textContent;
-    s.textContent = "Kopiert";
-    setTimeout(function () { s.textContent = old; }, 1500);
+(function () {
+  var sheet = document.getElementById('sellSheet');
+  var scrim = document.getElementById('sellScrim');
+  var form = document.getElementById('sellForm');
+  var nameEl = document.getElementById('sellName');
+  var qty = document.getElementById('sellQty');
+  var price = document.getElementById('sellPrice');
+
+  function openSell(id, name, p, stock) {
+    nameEl.textContent = name;
+    form.setAttribute('action', '/hardware/' + id + '/sell');
+    form.setAttribute('hx-post', '/hardware/' + id + '/sell');
+    qty.max = stock; qty.value = 1;
+    price.value = p || '';
+    sheet.hidden = false;
+  }
+  function closeSell() { sheet.hidden = true; }
+  if (scrim) scrim.addEventListener('click', closeSell);
+  Array.prototype.slice.call(document.querySelectorAll('.sell-btn')).forEach(function (b) {
+    if (b.disabled) return;
+    b.addEventListener('click', function () {
+      openSell(b.dataset.id, b.dataset.name, b.dataset.price, b.dataset.stock);
+    });
   });
-});
-// Lukk «Selg»-popup ved klikk utenfor.
-document.addEventListener("click", function (e) {
-  document.querySelectorAll("details.sell-details[open]").forEach(function (d) {
-    if (!d.contains(e.target)) d.removeAttribute("open");
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSell(); });
+
+  // Selg og Kopier bruker dokument-handlere så ny kort (HTMX) også virker.
+  document.addEventListener('click', function (e) {
+    var sb = e.target.closest ? e.target.closest('.sell-btn') : null;
+    if (sb && sb.dataset && sb.dataset.id && !sb.disabled) {
+      openSell(sb.dataset.id, sb.dataset.name, sb.dataset.price, sb.dataset.stock);
+      return;
+    }
+    var cb = e.target.closest ? e.target.closest('.copy-btn') : null;
+    if (cb) {
+      var text = cb.getAttribute('data-copy') || '';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function () {
+          cb.textContent = 'Kopiert';
+          setTimeout(function () { cb.textContent = 'Kopier'; }, 1500);
+        });
+      }
+      return;
+    }
   });
-});
+})();
 </script>

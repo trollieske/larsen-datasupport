@@ -47,11 +47,15 @@ function toggleTheme() {
 </header>
 
 <main class="container">
-  <% if @notice %>
-    <div class="flash" role="status"><%= h(@notice) %></div>
+  <% if @timer_bar && (tb = active_timer) %>
+    <%= erb :_timer_bar, layout: false, locals: { active: tb, back: request.path_info } %>
   <% end %>
   <%= yield %>
 </main>
+
+<% if @notice %>
+  <div class="toast" id="toast" role="status" aria-live="polite"><%= h(@notice) %><button type="button" class="toast-close" onclick="this.closest('#toast').remove()" aria-label="Lukk"><%= erb :_icon, locals: { name: "x", size: 14 } %></button></div>
+<% end %>
 
 <footer class="footer">
   <p>Larsen Datasupport · Internt verktøy · Databasen er én fil: <code>data/larsen.db</code></p>
@@ -85,6 +89,9 @@ function toggleTheme() {
 
 <script>
 (function () {
+  // Toast-dismissering automatisk.
+  var toast = document.getElementById('toast');
+  if (toast) { setTimeout(function () { toast.remove(); }, 5000); }
   var more = document.getElementById('bnMore');
   var sheet = document.getElementById('moreSheet');
   var backdrop = document.getElementById('moreBackdrop');
