@@ -1,7 +1,7 @@
 <h1>Kontakter — enkelt CRM</h1>
 
 <section class="card import-card">
-  <h2>🖼️ Importér kontakter fra skjermbilde</h2>
+  <h2><%= erb :_icon, locals: { name: "image", size: 18 } %> Importér kontakter fra skjermbilde</h2>
   <p class="muted small">Ta skjermbilde av en kontaktliste (telefon, e-post, kundeoppslag) og <strong>dra den hit</strong> eller <strong>lim inn med Ctrl+V</strong> — vi leser navn, e-post og telefon med OCR og legger de rett i CRM-en.</p>
   <div id="dropzone" class="dropzone" tabindex="0">
     <p>Dra og slipp bilde her …</p>
@@ -18,7 +18,7 @@
     <h3>Forhåndsvisning — rediger før lagring</h3>
     <div id="dz-rows"></div>
     <div class="actions">
-      <button type="button" class="btn primary" id="dz-add">＋ Legg til valgte i CRM</button>
+      <button type="button" class="btn primary" id="dz-add"><%= erb :_icon, locals: { name: "plus", size: 16 } %> Legg til valgte i CRM</button>
       <label class="check"><input type="checkbox" id="dz-all" checked> Velg alle</label>
     </div>
   </div>
@@ -231,7 +231,7 @@
             <td class="no-print actions-cell">
               <a class="btn small" href="/kontakter?edit=<%= c['id'] %>">Rediger</a>
               <form method="post" action="/kontakter/<%= c['id'] %>/delete" class="inline-form" onsubmit="return confirm('Slette <%= js(c['name']) %>?')">
-                <button class="btn small danger">✕</button>
+                <button class="btn small danger" title="Slette"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
               </form>
             </td>
           </tr>

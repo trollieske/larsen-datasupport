@@ -103,7 +103,7 @@ document.addEventListener("click", function (e) {
   navigator.clipboard.writeText(text).then(function () {
     var s = b.querySelector("span");
     var old = s.textContent;
-    s.textContent = "Kopiert ✓";
+    s.textContent = "Kopiert";
     setTimeout(function () { s.textContent = old; }, 1500);
   });
 });

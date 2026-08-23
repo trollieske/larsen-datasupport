@@ -25,7 +25,7 @@
           <td class="num"><%= format_kr(e["amount_ore"]) %></td>
           <td class="no-print">
             <form method="post" action="/timer/<%= e['id'] %>/delete" onsubmit="return confirm('Slette registreringen?')">
-              <button class="btn small danger" title="Slett">✕</button>
+              <button class="btn small danger" title="Slett"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
             </form>
           </td>
         </tr>

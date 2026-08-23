@@ -1,0 +1,46 @@
+<%# Lucide-style inline SVG-ikoner. Ingen emoji/CDN/font.
+    Lokaler: name:, size: (px, default 20).
+    stroke=currentColor → arvet farge fra omgivende tekst. %>
+<%
+  size = (size || 20).to_i
+  paths = {
+    # appmerke
+    "brand" => '<path d="M18.5 4.5c.4.2 2.1 1.4-2 1 1.2-.5 1.4.8-2.4 1.2-3.6 2.2 1.2-.3 2.6-3.8 1 2.4-.6-.4 7.3 2.6 1.2 3.2-5.4-1.6-3.4-2.2-2.4.8-1.2 4.4-1.2 1.4-4.5-.5-.8-3.9 1.1-3.5-.1-.4Z"/>',
+    # nav
+    "layout" => '<rect x="3" y="4" width="7" height="8"/><rect x="13" y="4" width="8" height="8"/><rect x="3" y="14" width="18" height="3"/><rect x="3" y="19" width="18" height="2"/>',
+    "home" => '<path d="M4 14v4H4zM4 14h16 5H4zM4 3h16V22H4z"/>',
+    "timer" => '<circle cx="12" cy="12" r="8"/><path d="M12 9V13M12 13l3 0"/>',
+    "invoice" => '<path d="M6 3h12v3H6zM5 8h14v8H5zM7 12h10M7 16h10"/>',
+    "box" => '<path d="M4 3h16v4H4z"/><rect x="4" y="8" width="16" height="11"/><path d="M12 8v11M4 9h16"/>',
+    "menu" => '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    "settings" => '<circle cx="12" cy="12" r="4"/><path d="M12 7v10M5 12h14M9 8h6"/>',
+    "users" => '<circle cx="8" cy="8" r="4"/><circle cx="16" cy="8" r="4"/><path d="M8 12h8l0 6-8 0z"/>',
+    "contact" => '<circle cx="12" cy="7" r="4"/><path d="M4 13h16v6H4z"/>',
+    "mail" => '<rect x="6" y="4" width="14" height="5"/><path d="M5 6h14l-7 3 7-3z"/><path d="M6 15h13v5H6z"/>',
+    "send" => '<path d="M14 20l-5 0-6-6H4z"/>',
+    "megaphone" => '<path d="M6 5h12v8H6z"/><path d="M12 6l9 5v-1.6z"/><path d="M15 3h4"/>',
+    "back" => '<path d="M19 12h-6l-4-2 0 8z"/>',
+    "forward" => '<path d="M5 12h6l4 2 0-8z"/>',
+    "wallet" => '<circle cx="12" cy="10" r="8"/><path d="M12 10l4 2-3-4z"/>',
+    "shop" => '<path d="M7 3h10v15H7z"/><path d="M7 12h10M9 20h8"/>',
+    "refresh" => '<path d="M12 4l10 6H12z"/><path d="M12 20v-6H12z"/>',
+    # handling
+    "plus" => '<path d="M12 5v14M5 12h14"/>',
+    "play" => '<path d="M8 5l10 15-10 0-9z" fill="currentColor"/>',
+    "stop" => '<rect x="7" y="7" width="10" height="10" fill="currentColor"/>',
+    "check" => '<path d="M4 13l5 8 4-7"/>',
+    "check2" => '<path d="M4 13l4 7 9-3z"/>',
+    "x" => '<path d="M6 6l12 12M18 6l-12 12"/>',
+    "pencil" => '<path d="M8 6h8v10H8zM10 5h4"/>',
+    "trash" => '<path d="M4 7h16v3H4zM4 13h16M6 15h12"/>',
+    "copy" => '<rect x="4" y="4" width="8" height="8"/><rect x="13" y="10" width="8" height="8"/>',
+    "lock" => '<rect x="4" y="2" width="16" height="6"/><path d="M5 12h14v6H5z"/><circle cx="12" cy="16" r="1.5"/>',
+    "alert" => '<path d="M12 3l-5 5 10 0z"/>',
+    "message" => '<circle cx="12" cy="12" r="8"/><path d="M12 13h-3M12 17l2"/>',
+    "sun" => '<circle cx="12" cy="12" r="4"/><path d="M12 5V8M12 19V16M5 12H8M19 12H16"/>',
+    "moon" => '<path d="M16 6a9 7 0 0 1 0-10z"/>',
+    "image" => '<rect x="3" y="5" width="18" height="12"/><circle cx="9" cy="9" r="1.4"/><circle cx="15" cy="9" r="1.4"/>',
+    "print" => '<path d="M6 5h12v4H6zM7 16h10M6 19h12"/>'
+  }
+%>
+<svg width="<%= size %>" height="<%= size %>" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><%= paths.fetch(name.to_s, "") %></svg>

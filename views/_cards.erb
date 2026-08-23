@@ -15,7 +15,7 @@
           <% if it['photo'] %>
             <img src="/upload/<%= it['photo'] %>" alt="<%= h(it['name']) %>" loading="lazy">
           <% else %>
-            <span class="ph-emoji"><%= CATEGORY_EMOJI.fetch(it['category'], "📦") %></span>
+            <%= erb :_icon, locals: { name: "image", size: 44 } %>
           <% end %>
         </div>
         <div class="item-body">
@@ -29,12 +29,12 @@
             <span class="sale">ut <%= format_kr(it['sale_price']) %></span>
           </p>
           <% if it['sale_price'].to_i > 0 && it['cost_price'].to_i > 0 %>
-            <p class="item-margin"><%= pct >= 0 ? '✓' : '✗' %> margin <%= format_kr(pct) %> / stk</p>
+            <p class="item-margin"><strong><%= pct >= 0 ? '+' : '−' %></strong> margin <%= format_kr(pct) %> / stk</p>
           <% end %>
           <div class="item-actions">
             <details class="sell-details">
               <summary class="btn small primary" <%= it['quantity_in_stock'].to_i <= 0 ? 'disabled onclick="return false"' : '' %>>
-                <%= it['quantity_in_stock'].to_i <= 0 ? 'Utsolgt' : '💰 Selg' %>
+                <%= it['quantity_in_stock'].to_i <= 0 ? 'Utsolgt' : 'Selg' %>
               </summary>
               <form method="post" action="/hardware/<%= it['id'] %>/sell" class="sell-form"
                     hx-post="/hardware/<%= it['id'] %>/sell" hx-target="#cards" hx-swap="innerHTML">
@@ -58,12 +58,12 @@
                 <button type="submit" class="btn small primary">Solgt!</button>
               </form>
             </details>
-            <button class="btn small copy-btn" data-copy="<%= h(it['name']) %> · <%= h(it['category']) %> · <%= format_kr(it['sale_price']) %> · <%= @base_url %>/vare/<%= it['id'] %>">⧉ <span>Kopier</span></button>
-            <a class="btn small" href="/hardware?edit=<%= it['id'] %>">✎</a>
+            <button class="btn small copy-btn" data-copy="<%= h(it['name']) %> · <%= h(it['category']) %> · <%= format_kr(it['sale_price']) %> · <%= @base_url %>/vare/<%= it['id'] %>"><span>Kopier</span></button>
+            <a class="btn small" href="/hardware?edit=<%= it['id'] %>"><%= erb :_icon, locals: { name: "pencil", size: 14 } %></a>
             <form method="post" action="/hardware/<%= it['id'] %>/delete" class="inline-form"
                   hx-post="/hardware/<%= it['id'] %>/delete" hx-target="#cards" hx-swap="innerHTML"
                   onsubmit="return confirm('Slette <%= js(it['name']) %>?')">
-              <button class="btn small danger" title="Slett">✕</button>
+              <button class="btn small danger" title="Slett"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
             </form>
           </div>
         </div>

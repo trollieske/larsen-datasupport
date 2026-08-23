@@ -10,8 +10,8 @@
 <body class="print-page">
 <div class="invoice">
   <header class="invoice-head no-print">
-    <button class="btn primary" onclick="window.print()">🖨 Skriv ut / Lag PDF</button>
-    <a class="btn" href="/faktura">← Tilbake</a>
+    <button class="btn primary" onclick="window.print()"><%= erb :_icon, locals: { name: "print", size: 16 } %> Skriv ut / Lag PDF</button>
+    <a class="btn" href="/faktura"><%= erb :_icon, locals: { name: "back", size: 16 } %> Tilbake</a>
   </header>
 
   <div class="invoice-body">

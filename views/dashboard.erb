@@ -4,14 +4,14 @@
     <p class="dash-sub muted">Velkommen til Larsen Datasupport — din bedrifts kontrollpanel.</p>
   </div>
   <div class="dash-actions">
-    <a class="btn primary" href="/timer">▶ Start timer</a>
-    <a class="btn ghost" href="/hardware">+ Legg til vare</a>
+    <a class="btn primary" href="/timer"><%= erb :_icon, locals: { name: "play", size: 16 } %> Start timer</a>
+    <a class="btn ghost" href="/hardware"><%= erb :_icon, locals: { name: "plus", size: 16 } %> Legg til vare</a>
   </div>
 </div>
 
 <div class="kpi-row">
   <article class="kpi">
-    <div class="kpi-icon" style="--c:#4f8cff">🕐</div>
+    <div class="kpi-icon"><%= erb :_icon, locals: { name: "timer", size: 20 } %></div>
     <div class="kpi-body">
       <p class="kpi-label">Denne måneden</p>
       <p class="kpi-value"><%= format_kr(@month_amount) %></p>
@@ -20,7 +20,7 @@
     <span class="kpi-chip good">+</span>
   </article>
   <article class="kpi">
-    <div class="kpi-icon" style="--c:#3ecf7e">💰</div>
+    <div class="kpi-icon"><%= erb :_icon, locals: { name: "wallet", size: 20 } %></div>
     <div class="kpi-body">
       <p class="kpi-label">Ufakturert — venter på deg</p>
       <p class="kpi-value"><%= format_kr(@uninvoiced_total) %></p>
@@ -28,7 +28,7 @@
     </div>
   </article>
   <article class="kpi">
-    <div class="kpi-icon" style="--c:#9a66ff">📦</div>
+    <div class="kpi-icon"><%= erb :_icon, locals: { name: "box", size: 20 } %></div>
     <div class="kpi-body">
       <p class="kpi-label">Lager</p>
       <p class="kpi-value"><%= @stock_count %></p>
@@ -64,19 +64,19 @@
       <p class="elapsed"><%= erb :_elapsed_span, layout: false, locals: { active: @active } %></p>
     </div>
   </div>
-  <form method="post" action="/timer/stop"><button class="btn danger big">■ Stopp timer</button></form>
+  <form method="post" action="/timer/stop"><button class="btn danger big"><%= erb :_icon, locals: { name: "stop", size: 16 } %> Stopp timer</button></form>
 </section>
 <% end %>
 
 <% if @suggestions && !@suggestions.empty? %>
 <section class="card sugg-card">
-  <div class="card-head"><h2>🤖 Neste grep — la appen peke deg</h2></div>
+  <div class="card-head"><h2>Neste grep — la appen peke deg</h2></div>
   <div class="sugg-list">
     <% @suggestions.each do |s| %>
       <a class="sugg-item" href="<%= h(s[:href]) %>">
-        <span class="sugg-emoji"><%= s[:icon] %></span>
+        <span class="sugg-emoji"><% ico = { "🧾" => "invoice", "📦" => "box", "⏱" => "timer", "💬" => "message", "🏷" => "wallet" }.fetch(s[:icon], "check") %><%= erb :_icon, locals: { name: ico, size: 18 } %></span>
         <span class="sugg-text"><%= h(s[:text]) %></span>
-        <span class="sugg-arrow">→</span>
+        <span class="sugg-arrow"><%= erb :_icon, locals: { name: "forward", size: 14 } %></span>
       </a>
     <% end %>
   </div>

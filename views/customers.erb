@@ -106,7 +106,7 @@
             <td class="no-print actions-cell">
               <a class="btn small" href="/kunder?edit=<%= c['id'] %>">Rediger</a>
               <form method="post" action="/kunder/<%= c['id'] %>/delete" onsubmit="return confirm('Slette <%= js(c['name']) %>?')">
-                <button class="btn small danger" title="Slett">✕</button>
+                <button class="btn small danger" title="Slett"><%= erb :_icon, locals: { name: "trash", size: 14 } %></button>
               </form>
             </td>
           </tr>

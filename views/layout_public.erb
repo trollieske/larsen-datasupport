@@ -2,24 +2,41 @@
 <html lang="no">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title><%= @title ? h(@title) + " · " : "" %><%= h(@shop_title || setting("shop_title")) %></title>
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <script src="/vendor/htmx.min.js" defer></script>
+<script>
+(function () {
+  var key = "larsen-theme";
+  var saved = localStorage.getItem(key);
+  var want = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", want);
+})();
+function toggleTheme() {
+  var el = document.documentElement;
+  var next = el.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  el.setAttribute("data-theme", next);
+  localStorage.setItem("larsen-theme", next);
+}
+</script>
 </head>
 <body class="public-page">
 <header class="topbar public-topbar">
-  <a class="brand" href="/butikk">🛒 <%= h(@shop_title || setting("shop_title")) %></a>
+  <a class="brand" href="/butikk"><span class="logo"><%= erb :_icon, locals: { name: "shop", size: 22 } %></span> <%= h(@shop_title || setting("shop_title")) %></a>
   <nav>
-    <a href="/butikk" <%= request.path_info == "/butikk" ? 'class="active"' : "" %>>Butikk</a>
     <% if web_user %>
-      <a href="/min-side"><%= h(web_user["name"] || web_user["email"]) %></a>
-      <a href="/logout">Logg ut</a>
+      <a href="/min-side"><%= erb :_icon, locals: { name: "contact", size: 16 } %> <%= h(web_user["name"] || web_user["email"]) %></a>
+      <a href="/logout"><%= erb :_icon, locals: { name: "x", size: 16 } %> Logg ut</a>
     <% else %>
-      <a href="/login" <%= request.path_info.start_with?("/login") ? 'class="active"' : "" %>>Logg inn</a>
+      <a href="/login" <%= request.path_info.start_with?("/login") ? 'class="active"' : "" %>><%= erb :_icon, locals: { name: "lock", size: 16 } %> Logg inn</a>
     <% end %>
   </nav>
+  <button type="button" class="icon-btn theme-toggle" onclick="toggleTheme()" aria-label="Bytt tema">
+    <span class="theme-sun" style="display:none"><%= erb :_icon, locals: { name: "sun", size: 20 } %></span>
+    <span class="theme-moon"><%= erb :_icon, locals: { name: "moon", size: 20 } %></span>
+  </button>
 </header>
 
 <main class="container">

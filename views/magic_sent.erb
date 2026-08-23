@@ -1,5 +1,5 @@
 <main class="public-card">
-  <h1>✓ Innloggingslenke sendt</h1>
+  <h1><span class="ok-icon"><%= erb :_icon, locals: { name: "check", size: 20 } %></span> Innloggingslenke sendt</h1>
   <p class="muted">Vi har sendt en lenke til <strong><%= h(@email) %></strong>.</p>
   <p class="muted small">Lenken er gyldig i 30 minutter — trykk på den i e-posten for å se prisene i butikken.</p>
   <% if @dev_link %>
@@ -8,5 +8,5 @@
       <a href="<%= @dev_link %>"><%= h(@dev_link) %></a>
     </div>
   <% end %>
-  <p><a class="btn" href="/butikk">← Tilbake til butikken</a></p>
+  <p><a class="btn" href="/butikk"><%= erb :_icon, locals: { name: "back", size: 16 } %> Tilbake til butikken</a></p>
 </main>

@@ -11,7 +11,7 @@
           <% if it['photo'] %>
             <img src="/upload/<%= it['photo'] %>" alt="<%= h(it['name']) %>" loading="lazy">
           <% else %>
-            <span class="ph-emoji big"><%= CATEGORY_EMOJI.fetch(it['category'], "📦") %></span>
+            <%= erb :_icon, locals: { name: "box", size: 44 } %>
           <% end %>
         </div>
         <span class="tag"><%= h(it['category']) %></span>
@@ -19,7 +19,7 @@
         <% if @logged_in && it['sale_price'].to_i > 0 %>
           <p class="shop-price"><%= format_kr(it['sale_price']) %></p>
         <% else %>
-          <p class="shop-price locked"><%= it['quantity_in_stock'].to_i <= 0 ? "Utsolgt" : "🔒 Logg inn for pris" %></p>
+          <p class="shop-price locked"><%= it['quantity_in_stock'].to_i <= 0 ? "Utsolgt" : "Logg inn for pris" %></p>
         <% end %>
         <% if it['quantity_in_stock'].to_i > 0 %>
           <span class="stock-badge"><%= it['quantity_in_stock'] %> på lager</span>

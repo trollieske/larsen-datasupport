@@ -23,6 +23,6 @@
   </section>
 <% end %>
 <div class="actions">
-  <a class="btn" href="/kontakter">← Alle kontakter</a>
+  <a class="btn" href="/kontakter"><%= erb :_icon, locals: { name: "back", size: 16 } %> Alle kontakter</a>
   <a class="btn" href="/kontakter?edit=<%= @contact['id'] %>">Rediger</a>
 </div>

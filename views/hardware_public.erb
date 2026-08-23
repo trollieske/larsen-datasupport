@@ -2,7 +2,7 @@
   <% if @item['photo'] %>
     <div class="product-photo"><img src="/upload/<%= @item['photo'] %>" alt="<%= h(@item['name']) %>"></div>
   <% else %>
-    <div class="ph"><%= CATEGORY_EMOJI.fetch(@item['category'], "📦") %></div>
+    <div class="ph"><%= erb :_icon, locals: { name: "box", size: 96 } %></div>
   <% end %>
   <span class="tag"><%= h(@item['category']) %></span>
   <h1><%= h(@item['name']) %></h1>
@@ -13,19 +13,19 @@
   <% if @item['quantity_in_stock'].to_i <= 0 %>
     <p class="soldout">Utsolgt — spør gjerne om nytt inn</p>
     <% if @logged_in %>
-      <a class="btn" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i ny: #{@item['name']}") %>">💬 Spør om nytt inn</a>
+      <a class="btn" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i ny: #{@item['name']}") %>">Spør om nytt inn</a>
     <% end %>
   <% elsif @price_shown %>
     <p class="price"><%= format_kr(@item['sale_price']) %></p>
     <div class="actions" style="justify-content:center">
-      <a class="btn primary big" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i: #{@item['name']}") %>&body=<%= urlq("Hei! Jeg er interessert i «#{@item['name']}» til #{format_kr(@item['sale_price'])}.") %>">💬 Interessert — send e-post</a>
+      <a class="btn primary big" href="mailto:<%= h(@contact_email) %>?subject=<%= urlq("Interessert i: #{@item['name']}") %>&body=<%= urlq("Hei! Jeg er interessert i «#{@item['name']}» til #{format_kr(@item['sale_price'])}.") %>">Send e-post</a>
     </div>
     <% unless @vipps.empty? %>
       <p class="muted">…eller Vipps direkte til <strong><%= h(@vipps) %></strong></p>
     <% end %>
   <% else %>
     <div class="price-locked">
-      <p class="price">🔒 Pris</p>
+      <p class="price">Pris</p>
       <p class="muted">Logg inn for å se innkjøpspriser og være først ute.</p>
       <a class="btn primary big" href="/login?next=/vare/<%= @item['id'] %>">Logg inn for pris</a>
     </div>

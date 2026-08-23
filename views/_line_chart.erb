@@ -1,4 +1,4 @@
-<%# Inline SVG kurvediagram med arealgradient (ingen CDN). data: [{label, value}] %>
+<%# Inline SVG kurvediagram med arealgradient — CSS-var for tema. data: [{label, value}] %>
 <% n = data.length %>
 <% max = [data.map { |d| d[:value].to_f }.max, 1].max %>
 <% pts = (0...n).map do |i|
@@ -10,21 +10,21 @@
   <svg viewBox="0 0 520 170" role="img" aria-label="Kurve">
     <defs>
       <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0%" stop-color="#9a66ff"/>
-        <stop offset="100%" stop-color="#4f8cff"/>
+        <stop offset="0%" stop-color="var(--accent)"/>
+        <stop offset="100%" stop-color="var(--accent-hover)"/>
       </linearGradient>
       <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#4f8cff" stop-opacity="0.28"/>
-        <stop offset="100%" stop-color="#4f8cff" stop-opacity="0"/>
+        <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.28"/>
+        <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
       </linearGradient>
     </defs>
     <% data.each_with_index do |d, i| %>
       <% x = (i * (500.0 / [n - 1, 1].max)).round %>
-      <text x="<%= x %>" y="162" text-anchor="middle" font-size="9" fill="#738096"><%= h(d[:label]) %></text>
+      <text x="<%= x %>" y="162" text-anchor="middle" font-size="9" fill="var(--text-tertiary)"><%= h(d[:label]) %></text>
     <% end %>
     <% points_str = pts.map { |p| p.join(',') }.join(' ') %>
     <polygon points="0,150 <%= points_str %> 500,150" fill="url(#areaGrad)"/>
     <polyline points="<%= points_str %>" fill="none" stroke="url(#strokeGrad)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-    <circle cx="<%= pts.last[0] %>" cy="<%= pts.last[1] %>" r="4" fill="#4f8cff"/>
+    <circle cx="<%= pts.last[0] %>" cy="<%= pts.last[1] %>" r="4" fill="var(--accent)"/>
   </svg>
 </div>

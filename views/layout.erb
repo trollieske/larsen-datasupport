@@ -7,24 +7,43 @@
 <link rel="icon" href="data:,">
 <link rel="stylesheet" href="/style.css">
 <script src="/vendor/htmx.min.js" defer></script>
+<script>
+// Tema: les preferanse, lagre manuelt valg.
+(function () {
+  var key = "larsen-theme";
+  var saved = localStorage.getItem(key);
+  var want = saved || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", want);
+})();
+function toggleTheme() {
+  var el = document.documentElement;
+  var next = el.getAttribute("data-theme") === "dark" ? "light" : "dark";
+  el.setAttribute("data-theme", next);
+  localStorage.setItem("larsen-theme", next);
+}
+</script>
 </head>
 <body>
 
 <!-- Topp-navigasjon (desktop) -->
 <header class="topbar">
-  <a class="brand" href="/"><span class="logo">🔧</span> Larsen Datasupport</a>
-  <nav>
-    <a href="/" <%= nav_active("/") %>>Oversikt</a>
-    <a href="/timer" <%= nav_active("/timer") %>>Timer</a>
-    <a href="/faktura" <%= nav_active("/faktura") %>>Faktura</a>
-    <a href="/hardware" <%= nav_active("/hardware") %>>Hardware</a>
-    <a href="/kunder" <%= nav_active("/kunder") %>>Kunder</a>
-    <a href="/kontakter" <%= nav_active("/kontakter") %>>Kontakter</a>
-    <a href="/epost" <%= nav_active("/epost") %>>E-post</a>
-    <a href="/utsendelse" <%= nav_active("/utsendelse") %>>Utsendelse</a>
-    <a href="/innstillinger" <%= nav_active("/innstillinger") %>>Innstillinger</a>
-    <a class="shop-link" href="/butikk" target="_blank" rel="noopener">Butikk ↗</a>
+  <a class="brand" href="/"><span class="logo"><%= erb :_icon, locals: { name: "brand", size: 22 } %></span> Larsen Datasupport</a>
+  <nav class="top-nav">
+    <a href="/" <%= nav_active("/") %>><%= erb :_icon, locals: { name: "layout", size: 16 } %> Oversikt</a>
+    <a href="/timer" <%= nav_active("/timer") %>><%= erb :_icon, locals: { name: "timer", size: 16 } %> Timer</a>
+    <a href="/faktura" <%= nav_active("/faktura") %>><%= erb :_icon, locals: { name: "invoice", size: 16 } %> Faktura</a>
+    <a href="/hardware" <%= nav_active("/hardware") %>><%= erb :_icon, locals: { name: "box", size: 16 } %> Lager</a>
+    <a href="/kunder" <%= nav_active("/kunder") %>><%= erb :_icon, locals: { name: "users", size: 16 } %> Kunder</a>
+    <a href="/kontakter" <%= nav_active("/kontakter") %>><%= erb :_icon, locals: { name: "contact", size: 16 } %> Kontakter</a>
+    <a href="/epost" <%= nav_active("/epost") %>><%= erb :_icon, locals: { name: "mail", size: 16 } %> E-post</a>
+    <a href="/utsendelse" <%= nav_active("/utsendelse") %>><%= erb :_icon, locals: { name: "megaphone", size: 16 } %> Utsendelse</a>
+    <a href="/innstillinger" <%= nav_active("/innstillinger") %>><%= erb :_icon, locals: { name: "settings", size: 16 } %> Innstillinger</a>
+    <a class="shop-link" href="/butikk" target="_blank" rel="noopener"><%= erb :_icon, locals: { name: "shop", size: 16 } %> Butikk</a>
   </nav>
+  <button type="button" class="icon-btn theme-toggle" onclick="toggleTheme()" aria-label="Bytt tema">
+    <span class="theme-sun" style="display:none"><%= erb :_icon, locals: { name: "sun", size: 20 } %></span>
+    <span class="theme-moon"><%= erb :_icon, locals: { name: "moon", size: 20 } %></span>
+  </button>
 </header>
 
 <main class="container">
@@ -38,13 +57,13 @@
   <p>Larsen Datasupport · Internt verktøy · Databasen er én fil: <code>data/larsen.db</code></p>
 </footer>
 
-<!-- Bun-navigasjonsbar (mobil, Apple-stil) -->
-<nav class="bottom-nav" id="bottomNav" aria-label="Hovedmeny">
-  <a href="/" class="bn-item <%= request.path_info == "/" ? "active" : "" %>" data-route="/"><span class="bn-icon">🏠</span><span class="bn-label">Oversikt</span></a>
-  <a href="/timer" class="bn-item <%= request.path_info.start_with?("/timer") ? "active" : "" %>" data-route="/timer"><span class="bn-icon">⏱</span><span class="bn-label">Timer</span></a>
-  <a href="/faktura" class="bn-item <%= request.path_info.start_with?("/faktura") ? "active" : "" %>" data-route="/faktura"><span class="bn-icon">🧾</span><span class="bn-label">Faktura</span></a>
-  <a href="/hardware" class="bn-item <%= request.path_info.start_with?("/hardware") ? "active" : "" %>" data-route="/hardware"><span class="bn-icon">📦</span><span class="bn-label">Lager</span></a>
-  <button type="button" class="bn-item bn-more" id="bnMore" aria-expanded="false"><span class="bn-icon">☰</span><span class="bn-label">Mer</span></button>
+<!-- Bun-navigasjon (mobil, app-stil) -->
+<nav class="bottom-nav" aria-label="Hovedmeny">
+  <a href="/" class="bn-item <%= request.path_info == "/" ? "active" : "" %>"><%= erb :_icon, locals: { name: "layout", size: 22 } %><span class="bn-label">Oversikt</span></a>
+  <a href="/timer" class="bn-item <%= request.path_info.start_with?("/timer") ? "active" : "" %>"><%= erb :_icon, locals: { name: "timer", size: 22 } %><span class="bn-label">Timer</span></a>
+  <a href="/faktura" class="bn-item <%= request.path_info.start_with?("/faktura") ? "active" : "" %>"><%= erb :_icon, locals: { name: "invoice", size: 22 } %><span class="bn-label">Faktura</span></a>
+  <a href="/hardware" class="bn-item <%= request.path_info.start_with?("/hardware") ? "active" : "" %>"><%= erb :_icon, locals: { name: "box", size: 22 } %><span class="bn-label">Lager</span></a>
+  <button type="button" class="bn-item bn-more" id="bnMore" aria-expanded="false"><%= erb :_icon, locals: { name: "menu", size: 22 } %><span class="bn-label">Mer</span></button>
 </nav>
 
 <!-- «Mer»-ark (mobil) -->
@@ -54,19 +73,18 @@
     <div class="sheet-grip" aria-hidden="true"></div>
     <div class="sheet-title">Meny</div>
     <div class="sheet-grid">
-      <a href="/kunder" class="sheet-item"><span class="sheet-ico">👥</span><span class="sheet-label">Kunder</span></a>
-      <a href="/kontakter" class="sheet-item"><span class="sheet-ico">📇</span><span class="sheet-label">Kontakter</span></a>
-      <a href="/epost" class="sheet-item"><span class="sheet-ico">📧</span><span class="sheet-label">E-post</span></a>
-      <a href="/utsendelse" class="sheet-item"><span class="sheet-ico">📣</span><span class="sheet-label">Utsendelse</span></a>
-      <a href="/innstillinger" class="sheet-item"><span class="sheet-ico">⚙️</span><span class="sheet-label">Innstillinger</span></a>
-      <a href="/butikk" class="sheet-item" target="_blank" rel="noopener"><span class="sheet-ico">🛒</span><span class="sheet-label">Butikk ↗</span></a>
+      <a href="/kunder" class="sheet-item"><span class="sheet-ico"><%= erb :_icon, locals: { name: "users", size: 22 } %></span><span class="sheet-label">Kunder</span></a>
+      <a href="/kontakter" class="sheet-item"><span class="sheet-ico"><%= erb :_icon, locals: { name: "contact", size: 22 } %></span><span class="sheet-label">Kontakter</span></a>
+      <a href="/epost" class="sheet-item"><span class="sheet-ico"><%= erb :_icon, locals: { name: "mail", size: 22 } %></span><span class="sheet-label">E-post</span></a>
+      <a href="/utsendelse" class="sheet-item"><span class="sheet-ico"><%= erb :_icon, locals: { name: "megaphone", size: 22 } %></span><span class="sheet-label">Utsendelse</span></a>
+      <a href="/innstillinger" class="sheet-item"><span class="sheet-ico"><%= erb :_icon, locals: { name: "settings", size: 22 } %></span><span class="sheet-label">Innstillinger</span></a>
+      <a href="/butikk" class="sheet-item" target="_blank" rel="noopener"><span class="sheet-ico"><%= erb :_icon, locals: { name: "shop", size: 22 } %></span><span class="sheet-label">Butikk</span></a>
     </div>
   </div>
 </div>
 
 <script>
-// «Mer»-arket: åpne/lukke + backdrop.
-(function(){
+(function () {
   var more = document.getElementById('bnMore');
   var sheet = document.getElementById('moreSheet');
   var backdrop = document.getElementById('moreBackdrop');
